@@ -2,9 +2,18 @@ NOTES:
     - Convention: Add trailing underscore if field has no associated column
         - Example: Hidden1_ int `col:"-"`
         - Example: Hidden2_ int 
+        - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.2.0 - KeyValueColumn 
+    x Commit : 2025-01-13 10:41
+    x kvc : KeyValueColumn 
+    x klc : KeyListColumn 
+    x KV() => *kvc
+    x KL() => *klc
+    x kvc.Build() => string, any
+    x klc.Build() => string, []any
 v0.1.1 - Columns 
-    - Commit : 2025-01-13 10:07
+    x Commit : 2025-01-13 10:07
     x Normal fields  
     x Pointer fields
     x Embedded structs
