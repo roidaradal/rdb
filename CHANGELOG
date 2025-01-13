@@ -4,6 +4,13 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.5.0 - Row Creator Function 
+    x Commit : 2025-01-13 18:26
+    x Normal column 
+    x Pointer column 
+    x Embedded column 
+    x AllColumns 
+    x Selected columns
 v0.4.1 - Reader Function Creator 
     x Commit : 2025-01-13 16:08
     x Normal column 

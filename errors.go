@@ -3,6 +3,6 @@ package rdb
 import "errors"
 
 var (
-	ErrNotStruct        = errors.New("not a struct")
-	ErrIncompleteFields = errors.New("incomplete fields")
+	errNotStruct        = errors.New("not a struct")
+	errIncompleteFields = errors.New("incomplete fields")
 )

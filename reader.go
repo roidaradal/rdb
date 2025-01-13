@@ -3,23 +3,23 @@ package rdb
 import "reflect"
 
 // Unifies *sql.Row and *sql.Rows
-type RowScannable interface {
+type rowScannable interface {
 	Scan(...any) error
 }
 
-type RowReader[T any] func(RowScannable) (*T, error)
+type rowReader[T any] func(rowScannable) (*T, error)
 
 /*
 Input: columns []string
 
-Output: RowReader function for given columns
+Output: rowReader function for given columns
 */
-func Reader[T any](columns []string) RowReader[T] {
-	return func(row RowScannable) (*T, error) {
+func Reader[T any](columns []string) rowReader[T] {
+	return func(row rowScannable) (*T, error) {
 		var x T
 		// Make sure T is struct
 		if !isStruct(x) {
-			return nil, ErrNotStruct
+			return nil, errNotStruct
 		}
 		numColumns := len(columns)
 		fields := make([]any, 0, numColumns)
@@ -32,7 +32,7 @@ func Reader[T any](columns []string) RowReader[T] {
 		}
 		// dont scan if number of fields and columns mismatch
 		if len(fields) != numColumns {
-			return nil, ErrIncompleteFields
+			return nil, errIncompleteFields
 		}
 		err := row.Scan(fields...)
 		return &x, err
