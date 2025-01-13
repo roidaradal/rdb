@@ -4,6 +4,12 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.4.0 - Select Query 
+    x Commit : 2025-01-13 15:43
+    x SelectQuery 
+    x NewSelectQuery 
+    x SelectQuery.Build()
+    x SelectQuery.Columns([]string)
 v0.3.1 - Update Query 
     x Commit : 2025-01-13 15:10
     x UpdateQuery 

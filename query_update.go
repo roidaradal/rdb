@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-type UpdateQuery[T any] struct {
-	ConditionQuery[T]
+type updateQuery[T any] struct {
+	conditionQuery[T]
 	updates []*kvc
 }
 
@@ -15,7 +15,7 @@ Output: Query (string), Values ([]any)
 
 Note: Query could be blank string if invalid query parts
 */
-func (q *UpdateQuery[T]) Build() (string, []any) {
+func (q *updateQuery[T]) Build() (string, []any) {
 	// Check if table is blank
 	if q.table == "" {
 		return defaultQueryValues() // return empty query if blank table
@@ -60,16 +60,17 @@ Note: Same &struct will be used for setting updates and conditions later
 
 Output: &UpdateQuery
 */
-func NewUpdateQuery[T any](object *T, table string) *UpdateQuery[T] {
-	q := UpdateQuery[T]{}
+func NewUpdateQuery[T any](object *T, table string) *updateQuery[T] {
+	q := updateQuery[T]{}
 	q.Initialize(object, table)
+	q.updates = make([]*kvc, 0)
 	return &q
 }
 
 /*
 Input: &UpdateQuery, &struct.Field, value
 */
-func Update[T any, U any](query *UpdateQuery[T], key *U, value U) {
+func Update[T any, U any](query *updateQuery[T], key *U, value U) {
 	update := keyValue(key, value)
 	query.updates = append(query.updates, update)
 }
