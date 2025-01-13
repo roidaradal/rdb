@@ -10,6 +10,7 @@ const defaultCondition string = "false"
 
 type Condition interface {
 	// Input: &struct, same struct used for Field=&struct.Field
+	//
 	// Output: condition (string), values ([]any)
 	Build(any) (string, []any)
 }

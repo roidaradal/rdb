@@ -32,3 +32,9 @@ func (q *ConditionQuery[T]) Initialize(object *T, table string) {
 func (q *ConditionQuery[T]) Where(condition Condition) {
 	q.condition = condition
 }
+
+/*************************** PRIVATE FUNCTIONS ***************************/
+
+func defaultQueryValues() (string, []any) {
+	return "", []any{}
+}

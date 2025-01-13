@@ -8,8 +8,15 @@ type DeleteQuery[T any] struct {
 
 /*
 Output: Query (string), Values ([]any)
+
+Note: Query could be blank string if invalid query parts
 */
 func (q *DeleteQuery[T]) Build() (string, []any) {
+	// Check if table is blank
+	if q.table == "" {
+		return defaultQueryValues() // return empty query if blank table
+	}
+
 	// Build condition
 	condition, values := q.condition.Build(q.object)
 
@@ -23,14 +30,11 @@ func (q *DeleteQuery[T]) Build() (string, []any) {
 /*
 Input: &struct, table (string)
 
-Note: Same &struct will be used for setting columns and conditions later
+Note: Same &struct will be used for setting conditions later
 
-Output: &DeleteQuery, or nil if table is blank
+Output: &DeleteQuery
 */
 func NewDeleteQuery[T any](object *T, table string) *DeleteQuery[T] {
-	if table == "" {
-		return nil
-	}
 	q := DeleteQuery[T]{}
 	q.Initialize(object, table)
 	return &q
