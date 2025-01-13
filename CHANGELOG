@@ -1,5 +1,21 @@
-#########################################################################
+NOTES:
+    - Convention: Add trailing underscore if field has no associated column
+        - Example: Hidden1_ int `col:"-"`
+        - Example: Hidden2_ int 
+##############################################################################
+v0.1.1 - Columns 
+    - Commit : 2025-01-13 10:07
+    x Normal fields  
+    x Pointer fields
+    x Embedded structs
+    x EmptyColumns
+    x Column (single column)
 v0.1.0 - All Columns 
     x Commit : 2025-01-13 09:01
     x Normal fields 
     x Embedded structs
+    x GetColumnTag
+        x SkipTagValue 
+        x BlankColumnTag 
+        x NoColumnTag 
+        x NoStructTag
