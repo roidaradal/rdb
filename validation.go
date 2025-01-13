@@ -18,3 +18,14 @@ func isStructPointer(t any) bool {
 	_struct := reflect.ValueOf(t).Elem().Interface()
 	return isStruct(_struct)
 }
+
+func isNil(t any) bool {
+	if t == nil {
+		return true
+	}
+	switch reflect.TypeOf(t).Kind() {
+	case reflect.Pointer, reflect.Map, reflect.Array, reflect.Slice, reflect.Chan:
+		return reflect.ValueOf(t).IsNil()
+	}
+	return false
+}

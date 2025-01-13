@@ -8,7 +8,7 @@ import (
 
 const defaultCondition string = "false"
 
-type condition interface {
+type Condition interface {
 	// Input: &struct, same struct used for Field=&struct.Field
 	// Output: condition (string), values ([]any)
 	Build(any) (string, []any)
@@ -28,7 +28,7 @@ type klCondition struct {
 }
 
 type conditionSet struct {
-	conditions []condition
+	conditions []Condition
 	operator   string
 }
 
@@ -55,7 +55,7 @@ func (c *kvCondition) Build(t any) (string, []any) {
 	if column == "" {
 		return defaultConditionValues()
 	} else {
-		return valueCondition(column, c.operator), []any{value}
+		return singleConditionValues(column, c.operator, value)
 	}
 }
 
@@ -78,7 +78,7 @@ func (c *klCondition) Build(t any) (string, []any) {
 	} else if numValues == 0 {
 		return defaultConditionValues()
 	} else if numValues == 1 {
-		return valueCondition(column, c.soloOperator), values
+		return singleConditionValues(column, c.soloOperator, values[0])
 	} else {
 		return listCondition(column, c.listOperator, numValues), values
 	}
@@ -105,12 +105,12 @@ func (cs *conditionSet) Build(t any) (string, []any) {
 		conditions := make([]string, numConditions)
 		allValues := make([]any, 0)
 		for i, cond := range cs.conditions {
-			c, values := cond.Build(t)
-			if c == defaultCondition {
+			condition, values := cond.Build(t)
+			if condition == defaultCondition {
 				// if any condition fails, return default condition (false)
 				return defaultConditionValues()
 			}
-			conditions[i] = c
+			conditions[i] = condition
 			allValues = append(allValues, values...)
 		}
 		glue := fmt.Sprintf(" %s ", cs.operator)
@@ -127,8 +127,16 @@ func defaultConditionValues() (string, []any) {
 }
 
 // Used for single value conditions
-func valueCondition(column, operator string) string {
-	return fmt.Sprintf("%s %s ?", column, operator)
+func singleConditionValues(column, operator string, value any) (string, []any) {
+	isValueNil := isNil(value)
+	if operator == opEqual && isValueNil {
+		return fmt.Sprintf("%s IS NULL", column), []any{}
+	} else if operator == opNotEqual && isValueNil {
+		return fmt.Sprintf("%s IS NOT NULL", column), []any{}
+	} else {
+		return fmt.Sprintf("%s %s ?", column, operator), []any{value}
+	}
+
 }
 
 // Used for list values conditions
