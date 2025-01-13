@@ -4,6 +4,12 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.2.1 - Conditions 
+    x Commit : 2025-01-13 11:49
+    x NoCondition 
+    x KVCondition 
+    x KLCondition 
+    x ConditionSet
 v0.2.0 - KeyValueColumn 
     x Commit : 2025-01-13 10:41
     x kvc : KeyValueColumn 

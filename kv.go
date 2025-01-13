@@ -12,12 +12,16 @@ type klc struct {
 	column string
 }
 
+/******************************** BUILD METHODS ********************************/
+
 /*
 Input: &struct
 
 Constraint: Same struct used for setting Field=&struct.Field
 
 Output: column (string), value (any)
+
+Note: column could be blank string
 */
 func (p *kvc) Build(t any) (string, any) {
 	p.column = Column(t, p.field)
@@ -30,6 +34,8 @@ Input: &struct
 Constraint: Same struct used for setting Field=&struct.Field
 
 Output: column (string), values ([]any)
+
+Note: column could be blank string
 */
 func (p *klc) Build(t any) (string, []any) {
 	p.column = Column(t, p.field)
@@ -45,7 +51,7 @@ Constraint: Type of key, value must match (compile-time validation)
 
 Output: pointer to new kvc struct (no column yet)
 
-Example: a = Account{}; KV(&a.Name, "")
+Example: a = Account{}; KV(&a.Name, "john")
 */
 func KV[T any](key *T, value T) *kvc {
 	return &kvc{
