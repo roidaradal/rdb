@@ -4,6 +4,12 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.3.0 - Delete Query 
+    x Commit : 2025-01-13 14:23
+    x Query 
+    x DeleteQuery
+    x NewDeleteQuery 
+    x DeleteQuery.Build()
 v0.2.2 - Condition Operators
     x Commit : 2025-01-13 13:50
     x Equal / NotEqual 
