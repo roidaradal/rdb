@@ -29,7 +29,7 @@ Constraint: Need to call SetReader() first, otherwise nothing happens
 
 Output: &struct that contains reader data, error
 */
-func (q *selectRowQuery[T]) Run(dbc *sql.DB) (*T, error) {
+func (q *selectRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
 	if dbc == nil {
 		return nil, errNoDBConnection
 	}

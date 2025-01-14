@@ -64,8 +64,7 @@ Constraint: Need to call SetReader() first, otherwise nothing happens
 
 Output: list of structs that contain reader data, error
 */
-func (q *selectQuery[T]) Run(dbc *sql.DB) ([]T, error) {
-
+func (q *selectQuery[T]) Query(dbc *sql.DB) ([]T, error) {
 	if dbc == nil {
 		return nil, errNoDBConnection
 	}

@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 )
@@ -51,6 +52,15 @@ func (q *updateQuery[T]) Build() (string, []any) {
 	query = fmt.Sprintf(query, q.table, update, condition)
 
 	return query, values
+}
+
+/*
+Input: initialized DB connection
+
+Output: *sql.Result, error
+*/
+func (q *updateQuery[T]) Exec(dbc *sql.DB) (*sql.Result, error) {
+	return prepareAndExec(q, dbc)
 }
 
 /*

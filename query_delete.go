@@ -1,6 +1,9 @@
 package rdb
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+)
 
 type deleteQuery[T any] struct {
 	conditionQuery[T]
@@ -25,6 +28,15 @@ func (q *deleteQuery[T]) Build() (string, []any) {
 	query = fmt.Sprintf(query, q.table, condition)
 
 	return query, values
+}
+
+/*
+Input: initialized DB connection
+
+Output: *sql.Result, error
+*/
+func (q *deleteQuery[T]) Exec(dbc *sql.DB) (*sql.Result, error) {
+	return prepareAndExec(q, dbc)
 }
 
 /*

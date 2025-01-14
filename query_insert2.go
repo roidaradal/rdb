@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"database/sql"
 	"fmt"
 	"maps"
 	"slices"
@@ -72,6 +73,15 @@ Constraint: Expects rows to have the same set of columns, column set will be bas
 */
 func (q *insertRowsQuery) Rows(rows []map[string]any) {
 	q.rows = rows
+}
+
+/*
+Input: initialized DB connection
+
+Output: *sql.Result, error
+*/
+func (q *insertRowsQuery) Exec(dbc *sql.DB) (*sql.Result, error) {
+	return prepareAndExec(q, dbc)
 }
 
 /*

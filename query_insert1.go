@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 )
@@ -49,6 +50,15 @@ Input: row map[string]any
 */
 func (q *insertRowQuery) Row(row map[string]any) {
 	q.row = row
+}
+
+/*
+Input: initialized DB connection
+
+Output: *sql.Result, error
+*/
+func (q *insertRowQuery) Exec(dbc *sql.DB) (*sql.Result, error) {
+	return prepareAndExec(q, dbc)
 }
 
 /*
