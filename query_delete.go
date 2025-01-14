@@ -36,6 +36,6 @@ Output: &DeleteQuery
 */
 func NewDeleteQuery[T any](object *T, table string) *deleteQuery[T] {
 	q := deleteQuery[T]{}
-	q.Initialize(object, table)
+	q.initialize(object, table)
 	return &q
 }

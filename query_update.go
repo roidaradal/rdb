@@ -62,7 +62,7 @@ Output: &UpdateQuery
 */
 func NewUpdateQuery[T any](object *T, table string) *updateQuery[T] {
 	q := updateQuery[T]{}
-	q.Initialize(object, table)
+	q.initialize(object, table)
 	q.updates = make([]*kvc, 0)
 	return &q
 }

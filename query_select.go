@@ -57,7 +57,7 @@ Output: &SelectQuery
 */
 func NewSelectQuery[T any](object *T, table string) *selectQuery[T] {
 	q := selectQuery[T]{}
-	q.Initialize(object, table)
+	q.initialize(object, table)
 	q.columns = make([]string, 0)
 	return &q
 }

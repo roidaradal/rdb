@@ -17,15 +17,15 @@ type conditionQuery[T any] struct {
 
 /******************************** QUERY METHODS ********************************/
 
-func (q *basicQuery[T]) Initialize(object *T, table string) {
+func (q *basicQuery[T]) initialize(object *T, table string) {
 	q.object = object
 	q.table = table
 }
 
 /*************************** CONDITION QUERY METHODS ***************************/
 
-func (q *conditionQuery[T]) Initialize(object *T, table string) {
-	q.basicQuery.Initialize(object, table)
+func (q *conditionQuery[T]) initialize(object *T, table string) {
+	q.basicQuery.initialize(object, table)
 	q.condition = &noCondition{}
 }
 
