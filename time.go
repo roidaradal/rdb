@@ -1,9 +1,6 @@
 package rdb
 
-import (
-	"time"
-	_ "time/tzdata"
-)
+import "time"
 
 const (
 	currentTimezone string = "Asia/Singapore"
