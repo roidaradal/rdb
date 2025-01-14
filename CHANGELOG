@@ -4,6 +4,10 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.7.2 - SQL Result Functions 
+    x Commit : 2025-01-14 18:38
+    x RowsAffected 
+    x LastInsertID
 v0.7.1 - Add Time Functions 
     x Commit : 2025-01-14 18:17
     x DateTimeNowWithExpiry
