@@ -2,7 +2,6 @@ package rdb
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 )
 
@@ -142,6 +141,6 @@ func singleConditionValues(column, operator string, value any) (string, []any) {
 
 // Used for list values conditions
 func listCondition(column, operator string, numValues int) string {
-	placeholders := strings.Join(slices.Repeat([]string{"?"}, numValues), ", ")
+	placeholders := repeatString(numValues, "?", ", ")
 	return fmt.Sprintf("%s %s (%s)", column, operator, placeholders)
 }

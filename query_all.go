@@ -1,5 +1,10 @@
 package rdb
 
+import (
+	"slices"
+	"strings"
+)
+
 type buildableQuery interface {
 	// Output: Query, Values
 	Build() (string, []any)
@@ -37,4 +42,8 @@ func (q *conditionQuery[T]) Where(condition Condition) {
 
 func defaultQueryValues() (string, []any) {
 	return "", []any{}
+}
+
+func repeatString(repeat int, item, glue string) string {
+	return strings.Join(slices.Repeat([]string{item}, repeat), glue)
 }

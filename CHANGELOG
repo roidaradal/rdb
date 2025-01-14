@@ -4,6 +4,14 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.5.2 - Insert Rows Query 
+    x Commit : 2025-01-14 09:16
+    x InsertRowsQuery 
+    x NewInsertRowsQuery 
+    x InsertRowsQuery.Build() 
+    x InsertRowsQuery.Rows([]map[string]any)
+    x At least 2 rows 
+    x 1 row
 v0.5.1 - Insert Row Query
     x Commit : 2025-01-14 08:02
     x InsertRowQuery 

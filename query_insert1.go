@@ -2,13 +2,12 @@ package rdb
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 )
 
-type insertRowQuery[T any] struct {
-	basicQuery[T]
-	row map[string]any
+type insertRowQuery struct {
+	table string
+	row   map[string]any
 }
 
 /*
@@ -16,7 +15,7 @@ Output: Query (string), Values ([]any)
 
 Note: Query could be blank string if invalid query parts
 */
-func (q *insertRowQuery[T]) Build() (string, []any) {
+func (q *insertRowQuery) Build() (string, []any) {
 	// Check if table is blank
 	if q.table == "" {
 		return defaultQueryValues() // return empty query if blank table
@@ -38,7 +37,7 @@ func (q *insertRowQuery[T]) Build() (string, []any) {
 
 	// Build query
 	cols := strings.Join(columns, ", ")
-	placeholders := strings.Join(slices.Repeat([]string{"?"}, count), ", ")
+	placeholders := repeatString(count, "?", ", ")
 	query := "INSERT INTO %s (%s) VALUES (%s)"
 	query = fmt.Sprintf(query, q.table, cols, placeholders)
 
@@ -48,20 +47,18 @@ func (q *insertRowQuery[T]) Build() (string, []any) {
 /*
 Input: row map[string]any
 */
-func (q *insertRowQuery[T]) Row(row map[string]any) {
+func (q *insertRowQuery) Row(row map[string]any) {
 	q.row = row
 }
 
 /*
-Input: &struct, table (string)
-
-Note: Same &struct will be used for setting row later
+Input: table (string)
 
 Output: &insertRowQuery
 */
-func NewInsertRowQuery[T any](object *T, table string) *insertRowQuery[T] {
-	q := insertRowQuery[T]{}
-	q.initialize(object, table)
+func NewInsertRowQuery(table string) *insertRowQuery {
+	q := insertRowQuery{}
+	q.table = table
 	q.row = make(map[string]any)
 	return &q
 }
