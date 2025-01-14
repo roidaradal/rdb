@@ -4,6 +4,11 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.7.1 - Add Time Functions 
+    x Commit : 2025-01-14 18:17
+    x DateTimeNowWithExpiry
+    x ParseTime
+    x CheckIfExpired
 v0.7.0 - Execute Insert/Update/Delete
     x Commit : 2025-01-14 16:45
     x InsertRowQuery.Exec(*dbc) => (*sql.Result, error)
