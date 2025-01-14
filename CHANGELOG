@@ -4,6 +4,10 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.6.2 - Run SelectQuery 
+    x Commit : 2025-01-14 16:31
+    x SelectQuery.SetReader(reader)
+    x SelectQuery.Run(*dbc) => ([]T, error)
 v0.6.1 - Run SelectRowQuery 
     x Commit : 2025-01-14 15:43
     x SelectRowQuery.SetReader(reader)

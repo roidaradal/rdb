@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 )
@@ -8,6 +9,7 @@ import (
 type selectQuery[T any] struct {
 	conditionQuery[T]
 	columns []string
+	reader  rowReader[T]
 }
 
 /*
@@ -49,6 +51,54 @@ func (q *selectQuery[T]) Columns(columns []string) {
 }
 
 /*
+Input: reader function
+*/
+func (q *selectQuery[T]) SetReader(reader rowReader[T]) {
+	q.reader = reader
+}
+
+/*
+Input: initialized DB connection
+
+Constraint: Need to call SetReader() first, otherwise nothing happens
+
+Output: list of structs that contain reader data, error
+*/
+func (q *selectQuery[T]) Run(dbc *sql.DB) ([]T, error) {
+
+	if dbc == nil {
+		return nil, errNoDBConnection
+	}
+	if q.reader == nil {
+		return nil, errNoRowReader
+	}
+	query, values := q.Build()
+	if query == "" {
+		return nil, errEmptyQuery
+	}
+
+	rows, err := dbc.Query(query, values...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]T, 0)
+	for rows.Next() {
+		item, err := q.reader(rows)
+		if err != nil {
+			continue
+		}
+		items = append(items, *item)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+/*
 Input: &struct, table (string)
 
 Note: Same &struct will be used for setting conditions later
@@ -59,5 +109,6 @@ func NewSelectQuery[T any](object *T, table string) *selectQuery[T] {
 	q := selectQuery[T]{}
 	q.initialize(object, table)
 	q.columns = make([]string, 0)
+	q.reader = nil
 	return &q
 }
