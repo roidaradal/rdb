@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type buildableQuery interface {
+type BuildableQuery interface {
 	// Output: Query, Values
 	Build() (string, []any)
 }

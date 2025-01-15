@@ -85,6 +85,15 @@ func (q *insertRowsQuery) Exec(dbc *sql.DB) (*sql.Result, error) {
 }
 
 /*
+Input: initialized DB transaction, QueryResultChecker
+
+Output: *sql.Result, error
+*/
+func (q *insertRowsQuery) ExecTx(dbtx *sql.Tx, resultChecker QueryResultChecker) (*sql.Result, error) {
+	return prepareAndExecTx(q, dbtx, resultChecker)
+}
+
+/*
 Input: &struct, table (string)
 
 Output: &insertRowsQuery

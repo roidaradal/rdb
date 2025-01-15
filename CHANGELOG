@@ -4,6 +4,15 @@ NOTES:
         - Example: Hidden2_ int 
         - Note: cannot use _Field format as Go reserves _ for anonymous fields
 ##############################################################################
+v0.8.0 - Transactions 
+    x Commit : 2025-01-15 10:57
+    x Make BuildableQuery interface public
+    x AssertRowsAffected
+    x Generic ExecTx 
+    x InsertRowQuery.ExecTx 
+    x InsertRowsQuery.ExecTx 
+    x UpdateQuery.ExecTx 
+    x DeleteQuery.ExecTx
 v0.7.2 - SQL Result Functions 
     x Commit : 2025-01-14 18:38
     x RowsAffected 
