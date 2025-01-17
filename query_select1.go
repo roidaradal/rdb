@@ -43,7 +43,7 @@ func (q *selectRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
 }
 
 /*
-Input: &struct, table (string)
+Input: &struct, table (string), reader
 
 Note: Same &struct will be used for setting conditions later
 

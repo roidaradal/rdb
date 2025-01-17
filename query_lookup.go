@@ -43,7 +43,7 @@ func (q *lookupQuery[T, K, V]) Build() (string, []any) {
 /*
 Input: initialized DB connection
 
-Output: map[key]value, error
+Output: map[key]value, where key in keys
 */
 func (q *lookupQuery[T, K, V]) Lookup(dbc *sql.DB) (map[K]V, error) {
 	if dbc == nil {
