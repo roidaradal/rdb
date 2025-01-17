@@ -25,8 +25,6 @@ func (q *selectRowQuery[T]) Build() (string, []any) {
 /*
 Input: initialized DB connection
 
-Constraint: Need to call SetReader() first, otherwise nothing happens
-
 Output: &struct that contains reader data, error
 */
 func (q *selectRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
@@ -51,9 +49,9 @@ Note: Same &struct will be used for setting conditions later
 
 Output: &SelectRowQuery
 */
-func NewSelectRowQuery[T any](object *T, table string) *selectRowQuery[T] {
+func NewSelectRowQuery[T any](object *T, table string, reader rowReader[T]) *selectRowQuery[T] {
 	q := selectRowQuery[T]{
-		selectQuery: *NewSelectQuery(object, table),
+		selectQuery: *NewSelectQuery(object, table, reader),
 	}
 	return &q
 }

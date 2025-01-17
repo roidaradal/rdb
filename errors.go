@@ -5,6 +5,8 @@ import "errors"
 var (
 	errNotStruct        = errors.New("not a struct")
 	errIncompleteFields = errors.New("incomplete fields")
+	errFieldNotFound    = errors.New("field not found")
+	errTypeMismatch     = errors.New("type mismatch")
 )
 
 var (

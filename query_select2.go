@@ -51,16 +51,7 @@ func (q *selectQuery[T]) Columns(columns []string) {
 }
 
 /*
-Input: reader function
-*/
-func (q *selectQuery[T]) SetReader(reader rowReader[T]) {
-	q.reader = reader
-}
-
-/*
 Input: initialized DB connection
-
-Constraint: Need to call SetReader() first, otherwise nothing happens
 
 Output: list of structs that contain reader data, error
 */
@@ -104,10 +95,10 @@ Note: Same &struct will be used for setting conditions later
 
 Output: &SelectQuery
 */
-func NewSelectQuery[T any](object *T, table string) *selectQuery[T] {
+func NewSelectQuery[T any](object *T, table string, reader rowReader[T]) *selectQuery[T] {
 	q := selectQuery[T]{}
 	q.initialize(object, table)
 	q.columns = make([]string, 0)
-	q.reader = nil
+	q.reader = reader
 	return &q
 }

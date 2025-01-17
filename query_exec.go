@@ -16,6 +16,7 @@ func AssertNothing() QueryResultChecker {
 	}
 }
 
+// Returns nil sql.Result, because this can be used to return from ExecTx
 func Rollback(dbtx *sql.Tx, err error) (*sql.Result, error) {
 	err2 := dbtx.Rollback()
 	if err2 != nil {
