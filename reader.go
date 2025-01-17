@@ -74,3 +74,21 @@ func findColumnField(t any, column string) (any, bool) {
 	}
 	return nil, false
 }
+
+/*
+Input: &struct, column string
+
+Output: &struct.Field value matched by column tag
+*/
+func getColumnValue[V any](t any, column string) (V, error) {
+	var v V
+	field, ok := findColumnValue(t, column)
+	if !ok {
+		return v, errFieldNotFound
+	}
+	v, ok = field.(V)
+	if !ok {
+		return v, errTypeMismatch
+	}
+	return v, nil
+}

@@ -59,16 +59,7 @@ func (q *valueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 	if err != nil {
 		return v, err
 	}
-	field, ok := findColumnField(item, q.column)
-	if !ok {
-		return v, errFieldNotFound
-	}
-	vPtr, ok := field.(*V)
-	if !ok {
-		return v, errTypeMismatch
-	}
-	v = *vPtr
-	return v, nil
+	return getColumnValue[V](item, q.column)
 }
 
 /*
