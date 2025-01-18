@@ -2,14 +2,14 @@ package rdb
 
 import "reflect"
 
-type rowCreator[T any] func(*T) map[string]any
+type RowFn[T any] func(*T) map[string]any
 
 /*
 Input: columns []string
 
 Output: rowCreator function for given columns
 */
-func RowCreator[T any](columns []string) rowCreator[T] {
+func RowCreator[T any](columns []string) RowFn[T] {
 	return func(x *T) map[string]any {
 		// Make sure T is struct
 		if !isStructPointer(x) {
