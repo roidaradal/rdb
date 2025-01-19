@@ -6,12 +6,10 @@ import (
 )
 
 type lookupQuery[T any, K comparable, V any] struct {
-	basicQuery[T]
-	condition   Condition
+	conditionQuery[T]
 	keyColumn   string
 	valueColumn string
 	reader      RowReader[T]
-	keys        []K
 }
 
 /*
@@ -92,18 +90,12 @@ Pass in keys=nil to have no IN condition (find all)
 
 Output: &lookupQuery
 */
-func NewLookupQuery[T any, K comparable, V any](object *T, key *K, value *V, keys []K, table string) *lookupQuery[T, K, V] {
+func NewLookupQuery[T any, K comparable, V any](object *T, key *K, value *V, table string) *lookupQuery[T, K, V] {
 	q := lookupQuery[T, K, V]{}
 	q.initialize(object, table)
 	columns := Columns(object, key, value)
 	q.reader = Reader[T](columns)
 	q.keyColumn = columns[0]
 	q.valueColumn = columns[1]
-	q.keys = keys
-	if keys == nil {
-		q.condition = &matchAllCondition{}
-	} else {
-		q.condition = In(key, keys)
-	}
 	return &q
 }
