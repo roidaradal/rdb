@@ -8,7 +8,7 @@ import (
 type valueQuery[T any, V any] struct {
 	conditionQuery[T]
 	column string
-	reader rowReader[T]
+	reader RowReader[T]
 }
 
 /*

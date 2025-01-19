@@ -9,7 +9,7 @@ import (
 type selectQuery[T any] struct {
 	conditionQuery[T]
 	columns []string
-	reader  rowReader[T]
+	reader  RowReader[T]
 }
 
 /*
@@ -95,7 +95,7 @@ Note: Same &struct will be used for setting conditions later
 
 Output: &SelectQuery
 */
-func NewSelectQuery[T any](object *T, table string, reader rowReader[T]) *selectQuery[T] {
+func NewSelectQuery[T any](object *T, table string, reader RowReader[T]) *selectQuery[T] {
 	q := selectQuery[T]{}
 	q.initialize(object, table)
 	q.columns = make([]string, 0)

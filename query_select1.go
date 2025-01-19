@@ -49,7 +49,7 @@ Note: Same &struct will be used for setting conditions later
 
 Output: &SelectRowQuery
 */
-func NewSelectRowQuery[T any](object *T, table string, reader rowReader[T]) *selectRowQuery[T] {
+func NewSelectRowQuery[T any](object *T, table string, reader RowReader[T]) *selectRowQuery[T] {
 	q := selectRowQuery[T]{
 		selectQuery: *NewSelectQuery(object, table, reader),
 	}

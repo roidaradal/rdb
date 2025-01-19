@@ -10,7 +10,7 @@ type lookupQuery[T any, K comparable, V any] struct {
 	condition   Condition
 	keyColumn   string
 	valueColumn string
-	reader      rowReader[T]
+	reader      RowReader[T]
 	keys        []K
 }
 
@@ -86,7 +86,9 @@ func (q *lookupQuery[T, K, V]) Lookup(dbc *sql.DB) (map[K]V, error) {
 }
 
 /*
-Input: &struct &struct.KeyField, &struct.ValueField, []values, table
+Input: &struct &struct.KeyField, &struct.ValueField, []values, table,
+
+Pass in keys=nil to have no IN condition (find all)
 
 Output: &lookupQuery
 */
@@ -98,6 +100,10 @@ func NewLookupQuery[T any, K comparable, V any](object *T, key *K, value *V, key
 	q.keyColumn = columns[0]
 	q.valueColumn = columns[1]
 	q.keys = keys
-	q.condition = In(key, keys)
+	if keys == nil {
+		q.condition = &matchAllCondition{}
+	} else {
+		q.condition = In(key, keys)
+	}
 	return &q
 }

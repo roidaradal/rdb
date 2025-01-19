@@ -5,7 +5,10 @@ import (
 	"strings"
 )
 
-const defaultCondition string = "false"
+const (
+	defaultCondition string = "false"
+	trueCondition    string = "true"
+)
 
 type Condition interface {
 	// Input: &struct, same struct used for Field=&struct.Field
@@ -15,6 +18,8 @@ type Condition interface {
 }
 
 type noCondition struct{}
+
+type matchAllCondition struct{}
 
 type kvCondition struct {
 	pair     *kvc
@@ -43,6 +48,17 @@ Output: "false", empty list of values
 */
 func (c *noCondition) Build(t any) (string, []any) {
 	return defaultConditionValues()
+}
+
+/*
+Input: &struct, same struct used for Field=&struct.Field
+
+Note: Ignores the struct input, just passed in to meet the Build() interface
+
+Output: "true", empty list of values
+*/
+func (c *matchAllCondition) Build(t any) (string, []any) {
+	return matchAllConditionValues()
 }
 
 /*
@@ -124,6 +140,11 @@ func (cs *conditionSet) Build(t any) (string, []any) {
 // Default condition response: "false", []any{}
 func defaultConditionValues() (string, []any) {
 	return defaultCondition, []any{}
+}
+
+// Match all condition response: "true", []any{}
+func matchAllConditionValues() (string, []any) {
+	return trueCondition, []any{}
 }
 
 // Used for single value conditions

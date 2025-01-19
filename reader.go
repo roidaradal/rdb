@@ -7,14 +7,14 @@ type rowScannable interface {
 	Scan(...any) error
 }
 
-type rowReader[T any] func(rowScannable) (*T, error)
+type RowReader[T any] func(rowScannable) (*T, error)
 
 /*
 Input: columns []string
 
 Output: rowReader function for given columns
 */
-func Reader[T any](columns []string) rowReader[T] {
+func Reader[T any](columns []string) RowReader[T] {
 	return func(row rowScannable) (*T, error) {
 		var x T
 		// Make sure T is struct
