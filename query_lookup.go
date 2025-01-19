@@ -86,13 +86,14 @@ func (q *lookupQuery[T, K, V]) Lookup(dbc *sql.DB) (map[K]V, error) {
 /*
 Input: &struct &struct.KeyField, &struct.ValueField, []values, table,
 
-Pass in keys=nil to have no IN condition (find all)
+Note: Sets default condition = matchAll (true), so if no call to Condition(), it will get all results
 
 Output: &lookupQuery
 */
 func NewLookupQuery[T any, K comparable, V any](object *T, key *K, value *V, table string) *lookupQuery[T, K, V] {
 	q := lookupQuery[T, K, V]{}
 	q.initialize(object, table)
+	q.condition = &matchAllCondition{}
 	columns := Columns(object, key, value)
 	q.reader = Reader[T](columns)
 	q.keyColumn = columns[0]
