@@ -15,7 +15,7 @@ Output: Query (string), Values ([]any)
 Note: Query could be blank string if invalid query parts
 */
 func (q *selectRowQuery[T]) Build() (string, []any) {
-	query, values := q.selectQuery.Build()
+	query, values := buildSelectQuery(&q.selectQuery, false)
 	if query != "" {
 		query = fmt.Sprintf("%s LIMIT 1", query)
 	}
@@ -53,5 +53,6 @@ func NewSelectRowQuery[T any](object *T, table string, reader RowReader[T]) *sel
 	q := selectRowQuery[T]{
 		selectQuery: *NewSelectQuery(object, table, reader),
 	}
+	q.limit = 1
 	return &q
 }

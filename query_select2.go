@@ -10,6 +10,7 @@ type selectQuery[T any] struct {
 	conditionQuery[T]
 	columns []string
 	reader  RowReader[T]
+	limit   uint
 }
 
 /*
@@ -18,6 +19,10 @@ Output: Query (string), Values ([]any)
 Note: Query could be blank string if invalid query parts
 */
 func (q *selectQuery[T]) Build() (string, []any) {
+	return buildSelectQuery(q, true)
+}
+
+func buildSelectQuery[T any](q *selectQuery[T], includeLimit bool) (string, []any) {
 	// Check if table is blank
 	if q.table == "" {
 		return defaultQueryValues() // return empty query if blank table
@@ -38,6 +43,10 @@ func (q *selectQuery[T]) Build() (string, []any) {
 	query := "SELECT %s FROM %s WHERE %s"
 	query = fmt.Sprintf(query, columns, q.table, condition)
 
+	if includeLimit && q.limit > 0 {
+		query = fmt.Sprintf("%s LIMIT %d", query, q.limit)
+	}
+
 	return query, values
 }
 
@@ -48,6 +57,13 @@ Note: Make sure corresponding Reader uses the same list of columns
 */
 func (q *selectQuery[T]) Columns(columns []string) {
 	q.columns = columns
+}
+
+/*
+Input: limit uint
+*/
+func (q *selectQuery[T]) Limit(limit uint) {
+	q.limit = limit
 }
 
 /*
@@ -100,5 +116,6 @@ func NewSelectQuery[T any](object *T, table string, reader RowReader[T]) *select
 	q.initialize(object, table)
 	q.columns = make([]string, 0)
 	q.reader = reader
+	q.limit = 0 // default: no limit
 	return &q
 }
