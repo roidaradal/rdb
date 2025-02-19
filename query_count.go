@@ -34,7 +34,7 @@ func (q *countQuery[T]) Count(dbc *sql.DB) (int, error) {
 	}
 	count := 0
 	err := dbc.QueryRow(query, values...).Scan(&count)
-	if err == nil {
+	if err != nil {
 		return 0, err
 	}
 	return count, nil
