@@ -10,7 +10,9 @@ type selectQuery[T any] struct {
 	conditionQuery[T]
 	columns []string
 	reader  RowReader[T]
+	offset  uint
 	limit   uint
+	order   string
 }
 
 /*
@@ -43,8 +45,12 @@ func buildSelectQuery[T any](q *selectQuery[T], includeLimit bool) (string, []an
 	query := "SELECT %s FROM %s WHERE %s"
 	query = fmt.Sprintf(query, columns, q.table, condition)
 
+	if q.order != "" {
+		query = fmt.Sprintf("%s ORDER BY %s", query, q.order)
+	}
+
 	if includeLimit && q.limit > 0 {
-		query = fmt.Sprintf("%s LIMIT %d", query, q.limit)
+		query = fmt.Sprintf("%s LIMIT %d, %d", query, q.offset, q.limit)
 	}
 
 	return query, values
@@ -63,7 +69,26 @@ func (q *selectQuery[T]) Columns(columns []string) {
 Input: limit uint
 */
 func (q *selectQuery[T]) Limit(limit uint) {
+	q.offset = 0
 	q.limit = limit
+}
+
+/*
+Input: page number, batch size uint
+*/
+func (q *selectQuery[T]) Page(number, batchSize uint) {
+	q.offset = (number - 1) * batchSize
+	q.limit = batchSize
+}
+
+/*
+Input: column
+*/
+func (q *selectQuery[T]) OrderAsc(column string) {
+	q.order = fmt.Sprintf("%s ASC", column)
+}
+func (q *selectQuery[T]) OrderDesc(column string) {
+	q.order = fmt.Sprintf("%s DESC", column)
 }
 
 /*
