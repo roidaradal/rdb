@@ -1,6 +1,20 @@
-package rdb
+package query
 
 import "database/sql"
+
+type QueryResultChecker func(*sql.Result) bool
+
+func AssertRowsAffected(target int) QueryResultChecker {
+	return func(result *sql.Result) bool {
+		return RowsAffected(result) == target
+	}
+}
+
+func AssertNothing() QueryResultChecker {
+	return func(result *sql.Result) bool {
+		return true // dont check results
+	}
+}
 
 func RowsAffected(result *sql.Result) int {
 	count := 0

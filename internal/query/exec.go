@@ -1,22 +1,8 @@
-package rdb
+package query
 
 import "database/sql"
 
-type QueryResultChecker func(*sql.Result) bool
-
-func AssertRowsAffected(target int) QueryResultChecker {
-	return func(result *sql.Result) bool {
-		return RowsAffected(result) == target
-	}
-}
-
-func AssertNothing() QueryResultChecker {
-	return func(result *sql.Result) bool {
-		return true // dont check results
-	}
-}
-
-// Returns nil sql.Result, because this can be used to return from ExecTx
+// Returns nil sql.Result so that it can be used to return from ExecTx
 func Rollback(dbtx *sql.Tx, err error) (*sql.Result, error) {
 	err2 := dbtx.Rollback()
 	if err2 != nil {
@@ -25,11 +11,10 @@ func Rollback(dbtx *sql.Tx, err error) (*sql.Result, error) {
 	return nil, err
 }
 
-func prepareAndExecTx(q BuildableQuery, dbtx *sql.Tx, resultChecker QueryResultChecker) (*sql.Result, error) {
+func ExecTx(q Query, dbtx *sql.Tx, resultChecker QueryResultChecker) (*sql.Result, error) {
 	if dbtx == nil {
 		return nil, errNoDBTx
 	}
-
 	query, values := q.Build()
 	if query == "" {
 		return Rollback(dbtx, errEmptyQuery)
@@ -53,11 +38,10 @@ func prepareAndExecTx(q BuildableQuery, dbtx *sql.Tx, resultChecker QueryResultC
 	return &result, nil
 }
 
-func prepareAndExec(q BuildableQuery, dbc *sql.DB) (*sql.Result, error) {
+func Exec(q Query, dbc *sql.DB) (*sql.Result, error) {
 	if dbc == nil {
 		return nil, errNoDBConnection
 	}
-
 	query, values := q.Build()
 	if query == "" {
 		return nil, errEmptyQuery

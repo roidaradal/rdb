@@ -1,30 +1,25 @@
-package rdb
+package query
 
 import (
 	"database/sql"
 	"fmt"
 )
 
-type countQuery[T any] struct {
-	conditionQuery[T]
+type CountQuery struct {
+	conditionQuery
 }
 
-func (q *countQuery[T]) Build() (string, []any) {
-	// Check if table is blank
+func (q CountQuery) Build() (string, []any) {
 	if q.table == "" {
 		return defaultQueryValues()
 	}
-	// Build condition
-	condition, values := q.condition.Build(q.object)
-
-	// Build query
+	condition, values := q.condition.Build()
 	query := "SELECT COUNT(*) FROM %s WHERE %s"
 	query = fmt.Sprintf(query, q.table, condition)
-
 	return query, values
 }
 
-func (q *countQuery[T]) Count(dbc *sql.DB) (int, error) {
+func (q CountQuery) Count(dbc *sql.DB) (int, error) {
 	if dbc == nil {
 		return 0, errNoDBConnection
 	}
@@ -40,8 +35,10 @@ func (q *countQuery[T]) Count(dbc *sql.DB) (int, error) {
 	return count, nil
 }
 
-func NewCountQuery[T any](object *T, table string) *countQuery[T] {
-	q := countQuery[T]{}
-	q.initialize(object, table)
-	return &q
+func (q CountQuery) Exists(dbc *sql.DB) (bool, error) {
+	count, err := q.Count(dbc)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
