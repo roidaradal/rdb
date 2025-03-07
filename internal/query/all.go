@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/roidaradal/rdb/internal/condition"
 )
@@ -13,6 +14,12 @@ type Query interface {
 
 func defaultQueryValues() (string, []any) {
 	return "", []any{}
+}
+
+func QueryString(q Query) string {
+	query, values := q.Build()
+	query = strings.Replace(query, "?", "%v", -1)
+	return fmt.Sprintf(query, values...)
 }
 
 type baseQuery struct {

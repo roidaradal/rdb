@@ -14,3 +14,5 @@ var (
 	AssertRowsAffected = query.AssertRowsAffected
 	AssertNothing      = query.AssertNothing
 )
+
+type QueryResultChecker = query.QueryResultChecker

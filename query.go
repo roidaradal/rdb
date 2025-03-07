@@ -8,6 +8,8 @@ import (
 
 type Query = query.Query
 
+var QueryString = query.QueryString
+
 func NewCountQuery(table string) *query.CountQuery {
 	q := query.CountQuery{}
 	q.Initialize(table)
