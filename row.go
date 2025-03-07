@@ -15,6 +15,8 @@ func ToRow[T any](x *T) map[string]any {
 	return rowFn(x)
 }
 
-func RowReader[T any](columns []string) row.RowReader[T] {
+type RowReader[T any] = row.RowReader[T]
+
+func Reader[T any](columns []string) row.RowReader[T] {
 	return row.Reader[T](columns)
 }
