@@ -48,7 +48,8 @@ func (q ValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 	if err != nil {
 		return v, err
 	}
-	schema := types.NameOf(v)
+	var t T
+	schema := types.NameOf(t)
 	return getColumnValue[V](item, schema, q.column)
 }
 
