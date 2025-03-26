@@ -12,17 +12,24 @@ import (
 func Initialize(schemas ...any) error {
 	memo.Initialize()
 	for _, schema := range schemas {
-		name := types.NameOf(schema)
-		if !types.IsStructPointer(schema) {
-			return fmt.Errorf("invalid schema: %s", name)
+		if err := AddSchema(schema); err != nil {
+			return err
 		}
-		result := columns.All(schema)
-		memo.Instance[name] = schema
-		memo.AllColumns[name] = result.Columns
-		memo.ColumnField[name] = result.ColumnField
-		memo.UpdateColumnAddress(result.AddressOf)
-		memo.RowCreator[name] = row.Creator(result.Columns)
 	}
+	return nil
+}
+
+func AddSchema(schema any) error {
+	name := types.NameOf(schema)
+	if !types.IsStructPointer(schema) {
+		return fmt.Errorf("invalid schema: %s", name)
+	}
+	result := columns.All(schema)
+	memo.Instance[name] = schema
+	memo.AllColumns[name] = result.Columns
+	memo.ColumnField[name] = result.ColumnField
+	memo.UpdateColumnAddress(result.AddressOf)
+	memo.RowCreator[name] = row.Creator(result.Columns)
 	return nil
 }
 
