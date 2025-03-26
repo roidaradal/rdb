@@ -37,6 +37,11 @@ func Reader[T any](columns []string) RowReader[T] {
 	}
 }
 
+func FullReader[T any](schema *T) RowReader[T] {
+	columns := memo.ColumnsOf(schema)
+	return Reader[T](columns)
+}
+
 func findColumnField(x any, schema, column string) (any, bool) {
 	structValue := reflect.ValueOf(x).Elem()
 	fieldName := memo.GetFieldName(schema, column)

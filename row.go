@@ -20,3 +20,7 @@ type RowReader[T any] = row.RowReader[T]
 func Reader[T any](columns []string) row.RowReader[T] {
 	return row.Reader[T](columns)
 }
+
+func FullReader[T any](schema *T) row.RowReader[T] {
+	return row.FullReader(schema)
+}
