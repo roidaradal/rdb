@@ -95,3 +95,9 @@ func NewTopValueQuery[T any, V any](table string, field *V) *query.TopValueQuery
 	q.Initialize(table, field)
 	return &q
 }
+
+func NewDistinctValuesQuery[T any, V any](table string, field *V) *query.DistinctValuesQuery[T, V] {
+	q := query.DistinctValuesQuery[T, V]{}
+	q.Initialize(table, field)
+	return &q
+}
