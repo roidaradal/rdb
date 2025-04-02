@@ -46,3 +46,7 @@ func And(conditions ...Condition) *condition.Multi {
 func Or(conditions ...Condition) *condition.Multi {
 	return condition.NewMulti(op.Or, conditions...)
 }
+
+func NoCondition() *condition.MatchAll {
+	return &condition.MatchAll{}
+}
