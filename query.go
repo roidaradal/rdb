@@ -83,3 +83,15 @@ func NewFullSelectRowsQuery[T any](table string, reader row.RowReader[T]) *query
 	q.Columns(memo.ColumnsOf(t))
 	return &q
 }
+
+func NewTopRowQuery[T any](table string, reader row.RowReader[T]) *query.TopRowQuery[T] {
+	q := query.TopRowQuery[T]{}
+	q.Initialize(table, reader)
+	return &q
+}
+
+func NewTopValueQuery[T any, V any](table string, field *V) *query.TopValueQuery[T, V] {
+	q := query.TopValueQuery[T, V]{}
+	q.Initialize(table, field)
+	return &q
+}
