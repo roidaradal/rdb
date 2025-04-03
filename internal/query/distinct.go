@@ -4,19 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/roidaradal/rdb/internal/condition"
 	"github.com/roidaradal/rdb/internal/memo"
 	"github.com/roidaradal/rdb/internal/row"
 	"github.com/roidaradal/rdb/internal/types"
 )
 
 type DistinctValuesQuery[T any, V any] struct {
-	baseQuery
+	conditionQuery
 	reader row.RowReader[T]
 	column string
 }
 
 func (q *DistinctValuesQuery[T, V]) Initialize(table string, field *V) {
-	q.baseQuery.Initialize(table)
+	q.conditionQuery.Initialize(table)
+	q.condition = condition.MatchAll{}
 	q.column = memo.GetColumn(field)
 	q.reader = row.Reader[T]([]string{q.column})
 }
@@ -25,9 +27,10 @@ func (q DistinctValuesQuery[T, V]) Build() (string, []any) {
 	if q.table == "" || q.column == "" {
 		return defaultQueryValues()
 	}
-	query := "SELECT DISTINCT %s FROM %s"
-	query = fmt.Sprintf(query, q.column, q.table)
-	return query, []any{}
+	condition, values := q.condition.Build()
+	query := "SELECT DISTINCT %s FROM %s WHERE %s"
+	query = fmt.Sprintf(query, q.column, q.table, condition)
+	return query, values
 }
 
 func (q *DistinctValuesQuery[T, V]) Query(dbc *sql.DB) ([]V, error) {
