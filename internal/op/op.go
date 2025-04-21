@@ -16,6 +16,9 @@ const (
 	NotIn        string = "NOT IN"
 	And          string = "AND"
 	Or           string = "OR"
+	Prefix       string = "PREFIX"
+	Suffix       string = "SUFFIX"
+	Substring    string = "SUBSTRING"
 )
 
 func RepeatString(repeat int, item, glue string) string {

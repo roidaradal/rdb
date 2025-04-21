@@ -26,6 +26,15 @@ func singleConditionValues(column, operator string, value any) (string, []any) {
 		return fmt.Sprintf("%s IS NULL", column), []any{}
 	} else if operator == op.NotEqual && isValueNil {
 		return fmt.Sprintf("%s IS NOT NULL", column), []any{}
+	} else if operator == op.Prefix {
+		prefix := fmt.Sprintf("%v%%", value)
+		return fmt.Sprintf("%s LIKE ?", column), []any{prefix}
+	} else if operator == op.Suffix {
+		suffix := fmt.Sprintf("%%%v", value)
+		return fmt.Sprintf("%s LIKE ?", column), []any{suffix}
+	} else if operator == op.Substring {
+		substring := fmt.Sprintf("%%%v%%", value)
+		return fmt.Sprintf("%s LIKE ?", column), []any{substring}
 	} else {
 		return fmt.Sprintf("%s %s ?", column, operator), []any{value}
 	}
