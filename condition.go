@@ -15,6 +15,18 @@ func NotEqual[T any](key *T, value T) *condition.Value {
 	return condition.NewValue(key, value, op.NotEqual)
 }
 
+func Prefix(key *string, value string) *condition.Value {
+	return condition.NewValue(key, value, op.Prefix)
+}
+
+func Suffix(key *string, value string) *condition.Value {
+	return condition.NewValue(key, value, op.Suffix)
+}
+
+func Substring(key *string, value string) *condition.Value {
+	return condition.NewValue(key, value, op.Substring)
+}
+
 func Greater[T any](key *T, value T) *condition.Value {
 	return condition.NewValue(key, value, op.Greater)
 }
