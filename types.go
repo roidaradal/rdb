@@ -35,15 +35,8 @@ func (x CodedItem) GetCode() string {
 	return x.Code
 }
 
-// ID, CreatedAt, IsActive
-type Item3 struct {
-	UniqueItem
-	CreatedItem
-	ActiveItem
-}
-
 // ID, CreatedAt, IsActive, Code
-type Item4 struct {
+type Item struct {
 	UniqueItem
 	CreatedItem
 	ActiveItem

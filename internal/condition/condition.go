@@ -78,11 +78,12 @@ type Multi struct {
 
 func (c Multi) Build() (string, []any) {
 	numConditions := len(c.conditions)
-	if numConditions == 0 {
+	switch numConditions {
+	case 0:
 		return defaultConditionValues()
-	} else if numConditions == 1 {
+	case 1:
 		return c.conditions[0].Build()
-	} else {
+	default:
 		conditions := make([]string, numConditions)
 		allValues := make([]any, 0)
 		for i, cond := range c.conditions {

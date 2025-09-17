@@ -9,6 +9,12 @@ import (
 	"github.com/roidaradal/rdb/internal/types"
 )
 
+type Schema[T any] struct {
+	Ref    *T
+	Table  string
+	Reader RowReader[T]
+}
+
 func Initialize(schemas ...any) error {
 	memo.Initialize()
 	for _, schema := range schemas {
@@ -33,6 +39,6 @@ func AddSchema(schema any) error {
 	return nil
 }
 
-func Schema[T any](t T) *T {
+func SchemaOf[T any](t T) *T {
 	return memo.InstanceOf(t)
 }
