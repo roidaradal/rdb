@@ -84,6 +84,20 @@ func NewFullSelectRowsQuery[T any](table string, reader row.RowReader[T]) *query
 	return &q
 }
 
+func NewSelectAllRowsQuery[T any](table string, reader row.RowReader[T]) *query.SelectAllRowsQuery[T] {
+	q := query.SelectAllRowsQuery[T]{}
+	q.Initialize(table, reader)
+	return &q
+}
+
+func NewFullSelectAllRowsQuery[T any](table string, reader row.RowReader[T]) *query.SelectAllRowsQuery[T] {
+	var t T
+	q := query.SelectAllRowsQuery[T]{}
+	q.Initialize(table, reader)
+	q.Columns(memo.ColumnsOf(t))
+	return &q
+}
+
 func NewTopRowQuery[T any](table string, reader row.RowReader[T]) *query.TopRowQuery[T] {
 	q := query.TopRowQuery[T]{}
 	q.Initialize(table, reader)
