@@ -2,6 +2,7 @@ package rdb
 
 type ID = uint
 type DateTime = string
+type Date = string
 
 type UniqueItem struct {
 	ID ID `json:"-"`
