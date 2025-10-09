@@ -4,44 +4,42 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb/internal/memo"
 	"github.com/roidaradal/rdb/internal/row"
-	"github.com/roidaradal/rdb/internal/types"
 )
 
+// T = object type, V = value type
 type ValueQuery[T any, V any] struct {
 	conditionQuery
 	column string
 	reader row.RowReader[T]
 }
 
-func (q *ValueQuery[T, V]) Initialize(table string, field *V) {
+// Initialize ValueQuery
+func (q *ValueQuery[T, V]) Initialize(table string, fieldRef *V) {
 	q.conditionQuery.Initialize(table)
-	q.column = memo.GetColumn(field)
-	q.reader = row.Reader[T]([]string{q.column})
+	q.column = memo.GetColumn(fieldRef)
+	q.reader = row.Reader[T](q.column)
 }
 
+// Build the ValueQuery
 func (q ValueQuery[T, V]) Build() (string, []any) {
-	if q.table == "" || q.column == "" {
-		return defaultQueryValues()
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.column == "" {
+		return emptyQueryValues()
 	}
-	condition, values := q.condition.Build()
 	query := "SELECT %s FROM %s WHERE %s"
 	query = fmt.Sprintf(query, q.column, q.table, condition)
 	return query, values
 }
 
+// Execute the ValueQuery and get the column value
 func (q ValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 	var v V
-	if dbc == nil {
-		return v, errNoDBConnection
-	}
-	if q.reader == nil {
-		return v, errNoReader
-	}
-	query, values := q.Build()
-	if query == "" {
-		return v, errEmptyQuery
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return v, err
 	}
 	row := dbc.QueryRow(query, values...)
 	item, err := q.reader(row)
@@ -49,19 +47,20 @@ func (q ValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 		return v, err
 	}
 	var t T
-	schema := types.NameOf(t)
-	return getColumnValue[V](item, schema, q.column)
+	typeName := dyn.TypeOf(t)
+	return getColumnValue[V](item, typeName, q.column)
 }
 
-func getColumnValue[V any](x any, schema, column string) (V, error) {
+// Get the column value from given structRef and typeName
+func getColumnValue[V any](structRef any, typeName, column string) (V, error) {
 	var v V
-	value, ok := row.FindColumnValue(x, schema, column)
+	value, ok := row.GetColumnValue(structRef, typeName, column)
 	if !ok {
-		return v, errFieldNotFound
+		return v, errNotFoundField
 	}
 	v, ok = value.(V)
 	if !ok {
-		return v, errTypeAssertion
+		return v, errFailedTypeAssertion
 	}
 	return v, nil
 }

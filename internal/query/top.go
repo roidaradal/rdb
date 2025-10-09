@@ -5,25 +5,27 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb/internal/memo"
 	"github.com/roidaradal/rdb/internal/row"
-	"github.com/roidaradal/rdb/internal/types"
 )
 
 type TopRowQuery[T any] struct {
 	conditionQuery
-	reader  row.RowReader[T]
 	columns []string
 	order   string
+	reader  row.RowReader[T]
 }
 
+// T = object type, V = value type
 type TopValueQuery[T any, V any] struct {
 	conditionQuery
-	reader row.RowReader[T]
 	column string
 	order  string
+	reader row.RowReader[T]
 }
 
+// Initialize TopRowQuery
 func (q *TopRowQuery[T]) Initialize(table string, reader row.RowReader[T]) {
 	var t T
 	q.conditionQuery.Initialize(table)
@@ -31,75 +33,72 @@ func (q *TopRowQuery[T]) Initialize(table string, reader row.RowReader[T]) {
 	q.reader = reader
 }
 
-func (q *TopValueQuery[T, V]) Initialize(table string, field *V) {
+// Initialize TopValueQuery
+func (q *TopValueQuery[T, V]) Initialize(table string, fieldRef *V) {
 	q.conditionQuery.Initialize(table)
-	q.column = memo.GetColumn(field)
-	q.reader = row.Reader[T]([]string{q.column})
+	q.column = memo.GetColumn(fieldRef)
+	q.reader = row.Reader[T](q.column)
 }
 
+// Set TopRowQuery order (Ascending)
 func (q *TopRowQuery[T]) OrderAsc(column string) {
 	q.order = fmt.Sprintf("%s ASC", column)
 }
 
+// Set TopRowQuery order (Descending)
 func (q *TopRowQuery[T]) OrderDesc(column string) {
 	q.order = fmt.Sprintf("%s DESC", column)
 }
 
+// Set TopValueQuery order (Ascending)
 func (q *TopValueQuery[T, V]) OrderAsc(column string) {
 	q.order = fmt.Sprintf("%s ASC", column)
 }
 
+// Set TopValueQuery order (Descending)
 func (q *TopValueQuery[T, V]) OrderDesc(column string) {
 	q.order = fmt.Sprintf("%s DESC", column)
 }
 
+// Build the TopRowQuery
 func (q TopRowQuery[T]) Build() (string, []any) {
-	if q.table == "" || len(q.columns) == 0 {
-		return defaultQueryValues()
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || len(q.columns) == 0 || q.order == "" {
+		return emptyQueryValues()
 	}
 	columns := strings.Join(q.columns, ", ")
-	condition, values := q.condition.Build()
 	query := "SELECT %s FROM %s WHERE %s ORDER BY %s LIMIT 1"
 	query = fmt.Sprintf(query, columns, q.table, condition, q.order)
 	return query, values
 }
 
+// Build the TopValueQuery
 func (q TopValueQuery[T, V]) Build() (string, []any) {
-	if q.table == "" || q.column == "" {
-		return defaultQueryValues()
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil || q.column == "" || q.order == "" {
+		return emptyQueryValues()
 	}
-	condition, values := q.condition.Build()
 	query := "SELECT %s FROM %s WHERE %s ORDER BY %s LIMIT 1"
 	query = fmt.Sprintf(query, q.column, q.table, condition, q.order)
 	return query, values
 }
 
+// Execute the TopRowQuery and  get the top object
 func (q TopRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
-	if dbc == nil {
-		return nil, errNoDBConnection
-	}
-	if q.reader == nil {
-		return nil, errNoReader
-	}
-	query, values := q.Build()
-	if query == "" {
-		return nil, errEmptyQuery
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return nil, err
 	}
 	row := dbc.QueryRow(query, values...)
 	return q.reader(row)
 }
 
+// Execute the TopValueQuery and get the top value
 func (q TopValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 	var v V
-	if dbc == nil {
-		return v, errNoDBConnection
-	}
-	if q.reader == nil {
-		return v, errNoReader
-	}
-	query, values := q.Build()
-	if query == "" {
-		return v, errEmptyQuery
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return v, err
 	}
 	row := dbc.QueryRow(query, values...)
 	item, err := q.reader(row)
@@ -107,6 +106,6 @@ func (q TopValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 		return v, err
 	}
 	var t T
-	schema := types.NameOf(t)
-	return getColumnValue[V](item, schema, q.column)
+	typeName := dyn.TypeOf(t)
+	return getColumnValue[V](item, typeName, q.column)
 }

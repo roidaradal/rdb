@@ -2,91 +2,98 @@ package query
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 
-	"github.com/roidaradal/rdb/internal/op"
+	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/str"
 )
 
 type InsertRowQuery struct {
 	baseQuery
-	row map[string]any
+	row dict.Object
 }
 
 type InsertRowsQuery struct {
 	baseQuery
-	rows []map[string]any
+	rows []dict.Object
 }
 
+// Initialize InsertRowQuery
 func (q *InsertRowQuery) Initialize(table string) {
 	q.baseQuery.Initialize(table)
-	q.row = make(map[string]any)
+	q.row = make(dict.Object)
 }
 
+// Initialize InsertRowsQuery
 func (q *InsertRowsQuery) Initialize(table string) {
 	q.baseQuery.Initialize(table)
-	q.rows = make([]map[string]any, 0)
+	q.rows = make([]dict.Object, 0)
 }
 
-func (q *InsertRowQuery) Row(row map[string]any) {
+// Set insert row
+func (q *InsertRowQuery) Row(row dict.Object) {
 	q.row = row
 }
 
-func (q *InsertRowsQuery) Rows(rows []map[string]any) {
+// Set insert rows
+func (q *InsertRowsQuery) Rows(rows []dict.Object) {
 	q.rows = rows
 }
 
+// Build the InsertRowQuery
 func (q InsertRowQuery) Build() (string, []any) {
-	count := len(q.row)
-	if q.table == "" || count == 0 {
-		return defaultQueryValues()
+	numColumns := len(q.row)
+	err := q.baseQuery.preBuildCheck()
+	if err != nil || numColumns == 0 {
+		return emptyQueryValues()
 	}
-	columns := make([]string, 0, count)
-	values := make([]any, 0, count)
-	for column, value := range q.row {
-		columns = append(columns, column)
-		values = append(values, value)
-	}
+	columns, values := dict.Unzip(q.row)
 	cols := strings.Join(columns, ", ")
-	placeholders := op.RepeatString(count, "?", ", ")
+	placeholders := str.Repeat(numColumns, "?", ", ")
 	query := "INSERT INTO %s (%s) VALUES (%s)"
 	query = fmt.Sprintf(query, q.table, cols, placeholders)
 	return query, values
 }
 
+// Build the InsertRowsQuery
 func (q InsertRowsQuery) Build() (string, []any) {
 	numRows := len(q.rows)
-	if q.table == "" || numRows == 0 {
-		return defaultQueryValues()
+	err := q.baseQuery.preBuildCheck()
+	if err != nil || numRows == 0 {
+		return emptyQueryValues()
 	}
-	firstSignature := columnSignature(q.rows[0])
-	numColumns := len(q.rows[0])
-	columns := make([]string, 0, numColumns)
+	row1 := q.rows[0]
+	signature1 := columnSignature(row1)
+	numColumns := len(row1)
+	if numColumns == 0 {
+		return emptyQueryValues()
+	}
 	values := make([]any, 0, numRows*numColumns)
-	for column, value := range q.rows[0] {
-		columns = append(columns, column)
-		values = append(values, value)
-	}
+	columns, values1 := dict.Unzip(row1)
+	values = append(values, values1...)
 	for i := 1; i < numRows; i++ {
 		row := q.rows[i]
-		if columnSignature(row) != firstSignature {
-			return defaultQueryValues()
+		// Ensure same column signature as first row
+		if columnSignature(row) != signature1 {
+			return emptyQueryValues()
 		}
+		// Follows row1's column order
 		for _, column := range columns {
 			values = append(values, row[column])
 		}
 	}
 	cols := strings.Join(columns, ", ")
-	placeholder := fmt.Sprintf("(%s)", op.RepeatString(numColumns, "?", ", "))
-	placeholders := op.RepeatString(numRows, placeholder, ", ")
+	placeholder := fmt.Sprintf("(%s)", str.Repeat(numColumns, "?", ", "))
+	placeholders := str.Repeat(numRows, placeholder, ", ")
 	query := "INSERT INTO %s (%s) VALUES %s"
 	query = fmt.Sprintf(query, q.table, cols, placeholders)
 	return query, values
 }
 
-func columnSignature(row map[string]any) string {
-	keys := slices.Collect(maps.Keys(row))
-	slices.SortFunc(keys, strings.Compare)
-	return strings.Join(keys, "/")
+// Join the sorted column names as the signature
+func columnSignature(row dict.Object) string {
+	columns := dict.Keys(row)
+	slices.Sort(columns)
+	return strings.Join(columns, "/")
 }

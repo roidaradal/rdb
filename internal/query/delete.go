@@ -6,11 +6,12 @@ type DeleteQuery struct {
 	conditionQuery
 }
 
+// Build DeleteQuery
 func (q DeleteQuery) Build() (string, []any) {
-	if q.table == "" {
-		return defaultQueryValues()
+	condition, values, err := q.conditionQuery.preBuildCheck()
+	if err != nil {
+		return emptyQueryValues()
 	}
-	condition, values := q.condition.Build()
 	query := "DELETE FROM %s WHERE %s"
 	query = fmt.Sprintf(query, q.table, condition)
 	return query, values

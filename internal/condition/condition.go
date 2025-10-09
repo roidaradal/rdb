@@ -7,102 +7,118 @@ import (
 	"github.com/roidaradal/rdb/internal/kv"
 )
 
+// Condition object only needs to implement the Build() method
 type Condition interface {
-	// Condition: string, Values []any
+	// condition string, values []any
 	Build() (string, []any)
 }
 
+// No Condition; used as default for UPDATE, DELETE
 type None struct{}
 
+// Implement Condition interface for condition.None
 func (c None) Build() (string, []any) {
-	return defaultConditionValues()
+	return falseConditionValues()
 }
 
+// Match All Condition; used as default for SELECT
 type MatchAll struct{}
 
+// Implement Condition interface for condition.MatchAll
 func (c MatchAll) Build() (string, []any) {
-	return matchAllConditionValues()
+	return trueConditionValues()
 }
 
+// Value Condition; uses kv.Value (one value)
 type Value struct {
 	pair *kv.Value
 	op   string
 }
 
+// Implement Condition interface for condition.Value
 func (c Value) Build() (string, []any) {
-	column, value := c.pair.Get()
+	if c.pair == nil {
+		// no pair = false condition
+		return falseConditionValues()
+	}
+	column, value := c.pair.Tuple()
 	if column == "" {
-		return defaultConditionValues()
-	} else {
-		return singleConditionValues(column, c.op, value)
+		// no column = false condition
+		return falseConditionValues()
 	}
+	return soloConditionValues(column, c.op, value)
 }
 
-func NewValue[T any](key *T, value T, op string) *Value {
-	return &Value{
-		pair: kv.KeyValue(key, value),
-		op:   op,
-	}
+// Creates a new condition.Value
+func NewValue[T any](fieldRef *T, value T, op string) *Value {
+	return &Value{kv.KeyValue(fieldRef, value), op}
 }
 
+// List Condition; uses kv.List (multiple values)
 type List struct {
 	pair   *kv.List
 	listOp string
 	soloOp string
 }
 
+// Implement Condition interface for condition.List
 func (c List) Build() (string, []any) {
-	column, values := c.pair.Get()
+	if c.pair == nil {
+		// no pair = false condition
+		return falseConditionValues()
+	}
+	column, values := c.pair.Tuple()
 	numValues := len(values)
 	if column == "" || numValues == 0 {
-		return defaultConditionValues()
+		// no column or no values = false condition
+		return falseConditionValues()
 	} else if numValues == 1 {
-		return singleConditionValues(column, c.soloOp, values[0])
+		return soloConditionValues(column, c.soloOp, values[0])
 	} else {
 		return listCondition(column, c.listOp, numValues), values
 	}
 }
 
-func NewList[T any](key *T, values []T, listOp, soloOp string) *List {
-	return &List{
-		pair:   kv.KeyList(key, values),
-		listOp: listOp,
-		soloOp: soloOp,
-	}
+// Creates a new condition.List
+func NewList[T any](fieldRef *T, values []T, listOp, soloOp string) *List {
+	return &List{kv.KeyList(fieldRef, values), listOp, soloOp}
 }
 
+// Multi Condition; multiple conditions (AND, OR)
 type Multi struct {
 	conditions []Condition
 	op         string
 }
 
+// Implement Condition interface for condition.Multi
 func (c Multi) Build() (string, []any) {
 	numConditions := len(c.conditions)
 	switch numConditions {
 	case 0:
-		return defaultConditionValues()
+		// no conditions = false condition
+		return falseConditionValues()
 	case 1:
+		// one condition = only build that one
 		return c.conditions[0].Build()
 	default:
 		conditions := make([]string, numConditions)
 		allValues := make([]any, 0)
-		for i, cond := range c.conditions {
-			condition, values := cond.Build()
-			if condition == defaultCondition {
-				return defaultConditionValues()
+		for i, condition := range c.conditions {
+			conditionString, values := condition.Build()
+			if conditionString == falseCondition {
+				// If any of the conditions failed, return false condition
+				return falseConditionValues()
 			}
-			conditions[i] = condition
+			conditions[i] = conditionString
 			allValues = append(allValues, values...)
 		}
 		glue := fmt.Sprintf(" %s ", c.op)
-		fullCondition := fmt.Sprintf("(%s)", strings.Join(conditions, glue)) // wrap in parentheses
+		fullCondition := fmt.Sprintf("(%s)", strings.Join(conditions, glue)) // join by operator and wrap in parentheses
 		return fullCondition, allValues
 	}
 }
 
+// Creates a new condition.Multi
 func NewMulti(op string, conditions ...Condition) *Multi {
-	return &Multi{
-		conditions: conditions,
-		op:         op,
-	}
+	return &Multi{conditions, op}
 }

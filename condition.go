@@ -1,64 +1,76 @@
 package rdb
 
-import (
-	"github.com/roidaradal/rdb/internal/condition"
-	"github.com/roidaradal/rdb/internal/op"
-)
+import "github.com/roidaradal/rdb/internal/condition"
 
+// Condition interface
 type Condition = condition.Condition
 
-func Equal[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.Equal)
+// Create Equal condition
+func Equal[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Equal)
 }
 
-func NotEqual[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.NotEqual)
+// Create NotEqual condition
+func NotEqual[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.NotEqual)
 }
 
-func Prefix(key *string, value string) *condition.Value {
-	return condition.NewValue(key, value, op.Prefix)
+// Create Prefix condition
+func Prefix(fieldRef *string, value string) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Prefix)
 }
 
-func Suffix(key *string, value string) *condition.Value {
-	return condition.NewValue(key, value, op.Suffix)
+// Create Suffix condition
+func Suffix(fieldRef *string, value string) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Suffix)
 }
 
-func Substring(key *string, value string) *condition.Value {
-	return condition.NewValue(key, value, op.Substring)
+// Create Substring condition
+func Substring(fieldRef *string, value string) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Substring)
 }
 
-func Greater[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.Greater)
+// Create Greater condition
+func Greater[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Greater)
 }
 
-func GreaterEqual[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.GreaterEqual)
+// Create GreaterEqual condition
+func GreaterEqual[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.GreaterEqual)
 }
 
-func Less[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.Less)
+// Create Less condition
+func Less[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.Less)
 }
 
-func LessEqual[T any](key *T, value T) *condition.Value {
-	return condition.NewValue(key, value, op.LessEqual)
+// Create LessEqual condition
+func LessEqual[T any](fieldRef *T, value T) *condition.Value {
+	return condition.NewValue(fieldRef, value, condition.LessEqual)
 }
 
-func In[T any](key *T, values []T) *condition.List {
-	return condition.NewList(key, values, op.In, op.Equal)
+// Create In condition
+func In[T any](fieldRef *T, values []T) *condition.List {
+	return condition.NewList(fieldRef, values, condition.In, condition.Equal)
 }
 
-func NotIn[T any](key *T, values []T) *condition.List {
-	return condition.NewList(key, values, op.NotIn, op.NotEqual)
+// Create NotIn condition
+func NotIn[T any](fieldRef *T, values []T) *condition.List {
+	return condition.NewList(fieldRef, values, condition.NotIn, condition.NotEqual)
 }
 
+// Create And condition
 func And(conditions ...Condition) *condition.Multi {
-	return condition.NewMulti(op.And, conditions...)
+	return condition.NewMulti(condition.And, conditions...)
 }
 
+// Create Or condition
 func Or(conditions ...Condition) *condition.Multi {
-	return condition.NewMulti(op.Or, conditions...)
+	return condition.NewMulti(condition.Or, conditions...)
 }
 
+// Create NoCondition (match all)
 func NoCondition() *condition.MatchAll {
 	return &condition.MatchAll{}
 }

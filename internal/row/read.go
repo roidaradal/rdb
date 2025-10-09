@@ -1,53 +1,64 @@
 package row
 
 import (
+	"errors"
 	"reflect"
 
+	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb/internal/memo"
-	"github.com/roidaradal/rdb/internal/types"
 )
 
-type RowScanner interface {
+// Function that reads row values into object
+type RowReader[T any] = func(rowScanner) (*T, error)
+
+// Interface for *sql.Row and *sql.Rows
+type rowScanner interface {
 	Scan(...any) error
 }
 
-type RowReader[T any] = func(RowScanner) (*T, error)
-
-func Reader[T any](columns []string) RowReader[T] {
-	return func(row RowScanner) (*T, error) {
+// Creates a RowReader for type T, with the given columns
+func Reader[T any](columns ...string) RowReader[T] {
+	return func(row rowScanner) (*T, error) {
 		var x T
-		if !types.IsStruct(x) {
-			return nil, errNotStruct
+		if !dyn.IsStruct(x) {
+			return nil, errors.New("type is not a struct")
 		}
-		schema := types.NameOf(x)
+		typeName := dyn.TypeOf(x)
 		numColumns := len(columns)
-		fields := make([]any, 0, numColumns)
+		fieldRefs := make([]any, 0, numColumns)
 		for _, column := range columns {
-			field, ok := findColumnField(&x, schema, column)
-			if !ok {
-				continue
+			if column == "" {
+				continue // skip blank columns
 			}
-			fields = append(fields, field)
+			fieldRef, ok := getColumnField(&x, typeName, column)
+			if !ok {
+				continue // skip if column field not found
+			}
+			fieldRefs = append(fieldRefs, fieldRef)
 		}
-		if len(fields) != numColumns {
-			return nil, errIncompleteFields
+		if len(fieldRefs) != numColumns {
+			// return nil if some columns failed
+			return nil, errors.New("incomplete fields")
 		}
-		err := row.Scan(fields...)
+		err := row.Scan(fieldRefs...)
 		return &x, err
 	}
 }
 
-func FullReader[T any](schema *T) RowReader[T] {
-	columns := memo.ColumnsOf(schema)
-	return Reader[T](columns)
+// Creates a RowReader for type T, using all columns
+func FullReader[T any](ref *T) RowReader[T] {
+	columns := memo.ColumnsOf(ref)
+	return Reader[T](columns...)
 }
 
-func findColumnField(x any, schema, column string) (any, bool) {
-	structValue := reflect.ValueOf(x).Elem()
-	fieldName := memo.GetFieldName(schema, column)
+// From the given object reference and type name, get the reference to the corresponding column field,
+// Object is expected to be a struct pointer
+func getColumnField(structRef any, typeName, column string) (any, bool) {
+	structValue := reflect.ValueOf(structRef).Elem()
+	fieldName := memo.GetFieldName(typeName, column)
 	if fieldName == "" {
 		return nil, false
 	}
-	fieldAddress := structValue.FieldByName(fieldName).Addr().Interface()
-	return fieldAddress, true
+	fieldRef := structValue.FieldByName(fieldName).Addr().Interface()
+	return fieldRef, true
 }

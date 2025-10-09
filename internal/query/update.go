@@ -12,28 +12,36 @@ type UpdateQuery struct {
 	updates []*kv.Value
 }
 
-func Update[T any](q *UpdateQuery, key *T, value T) {
-	update := kv.KeyValue(key, value)
-	q.updates = append(q.updates, update)
+// Add query update (key = value),
+// Cannot be a method as generics are not supported in methods
+func Update[T any](q *UpdateQuery, fieldRef *T, value T) {
+	q.updates = append(q.updates, kv.KeyValue(fieldRef, value))
 }
 
+// Initialize UpdateQuery
 func (q *UpdateQuery) Initialize(table string) {
 	q.conditionQuery.Initialize(table)
 	q.updates = make([]*kv.Value, 0)
 }
 
+// Build UpdateQuery
 func (q UpdateQuery) Build() (string, []any) {
-	updateCount := len(q.updates)
-	if q.table == "" || updateCount == 0 {
-		return defaultQueryValues()
+	numUpdates := len(q.updates)
+	condition, conditionValues, err := q.conditionQuery.preBuildCheck()
+	if err != nil || numUpdates == 0 {
+		return emptyQueryValues()
 	}
-	condition, conditionValues := q.condition.Build()
-	values := make([]any, 0, updateCount+len(conditionValues))
-	updates := make([]string, updateCount)
+	values := make([]any, 0, numUpdates+len(conditionValues))
+	updates := make([]string, numUpdates)
 	for i, pair := range q.updates {
-		column, value := pair.Get()
+		if pair == nil {
+			// if kv pair is nil, return empty query
+			return emptyQueryValues()
+		}
+		column, value := pair.Tuple()
 		if column == "" {
-			return defaultQueryValues()
+			// if blank column is found, return empty query
+			return emptyQueryValues()
 		}
 		updates[i] = fmt.Sprintf("%s = ?", column)
 		values = append(values, value)

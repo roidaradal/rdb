@@ -4,45 +4,41 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/roidaradal/rdb/internal/condition"
+	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb/internal/memo"
 	"github.com/roidaradal/rdb/internal/row"
-	"github.com/roidaradal/rdb/internal/types"
 )
 
+// T = object type, V = value type
 type DistinctValuesQuery[T any, V any] struct {
-	conditionQuery
-	reader row.RowReader[T]
+	optionalConditionQuery
 	column string
+	reader row.RowReader[T]
 }
 
-func (q *DistinctValuesQuery[T, V]) Initialize(table string, field *V) {
-	q.conditionQuery.Initialize(table)
-	q.condition = condition.MatchAll{}
-	q.column = memo.GetColumn(field)
-	q.reader = row.Reader[T]([]string{q.column})
+// Initialize DistinctValuesQuery
+func (q *DistinctValuesQuery[T, V]) Initialize(table string, fieldRef *V) {
+	q.optionalConditionQuery.Initialize(table)
+	q.column = memo.GetColumn(fieldRef)
+	q.reader = row.Reader[T](q.column)
 }
 
+// Build the DistinctValuesQuery
 func (q DistinctValuesQuery[T, V]) Build() (string, []any) {
-	if q.table == "" || q.column == "" {
-		return defaultQueryValues()
+	condition, values, err := q.optionalConditionQuery.preBuildCheck()
+	if err != nil || q.column == "" {
+		return emptyQueryValues()
 	}
-	condition, values := q.condition.Build()
 	query := "SELECT DISTINCT %s FROM %s WHERE %s"
 	query = fmt.Sprintf(query, q.column, q.table, condition)
 	return query, values
 }
 
-func (q *DistinctValuesQuery[T, V]) Query(dbc *sql.DB) ([]V, error) {
-	if dbc == nil {
-		return nil, errNoDBConnection
-	}
-	if q.reader == nil {
-		return nil, errNoReader
-	}
-	query, values := q.Build()
-	if query == "" {
-		return nil, errEmptyQuery
+// Execute the DistinctValuesQuery and get list of distinct values
+func (q DistinctValuesQuery[T, V]) Query(dbc *sql.DB) ([]V, error) {
+	query, values, err := preReadCheck(q, dbc, q.reader)
+	if err != nil {
+		return nil, err
 	}
 	rows, err := dbc.Query(query, values...)
 	if err != nil {
@@ -51,16 +47,16 @@ func (q *DistinctValuesQuery[T, V]) Query(dbc *sql.DB) ([]V, error) {
 	defer rows.Close()
 
 	distinct := make([]V, 0)
-	var schema string = ""
+	typeName := ""
 	for rows.Next() {
 		item, err := q.reader(rows)
 		if err != nil {
 			continue
 		}
-		if schema == "" {
-			schema = types.NameOf(item)
+		if typeName == "" {
+			typeName = dyn.TypeOf(item)
 		}
-		value, err := getColumnValue[V](item, schema, q.column)
+		value, err := getColumnValue[V](item, typeName, q.column)
 		if err != nil {
 			continue
 		}

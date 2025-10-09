@@ -1,68 +1,84 @@
 package memo
 
-import "github.com/roidaradal/rdb/internal/types"
+import (
+	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/dyn"
+)
 
-var AllColumns map[string][]string           // {SchemaName => []ColumnNames}
-var ColumnAddress map[string]string          // {FieldAddress => ColumnName}
-var ColumnField map[string]map[string]string // {SchemaName => {ColumnName => FieldName}}
-var Instance map[string]any                  // {SchemaName => *T singleton}
-var RowCreator map[string]types.RowFn        // {SchemaName => RowCreatorFn}
+var (
+	allColumns       dict.StringListMap        // {TypeName => []ColumnNames}
+	columnAddress    dict.StringMap            // {FieldAddress => ColumnName}
+	typeColumnFields map[string]dict.StringMap // {TypeName => {ColumnName => FieldName}}
+	rowCreator       map[string]CreateRowFn    // {TypeName => CreateRowFn}
+)
 
+// Converts object to map[string]any for row insertion
+type CreateRowFn func(any) dict.Object
+
+// Initialize the memo data structures
 func Initialize() {
-	AllColumns = make(map[string][]string)
-	ColumnAddress = make(map[string]string)
-	ColumnField = make(map[string]map[string]string)
-	Instance = make(map[string]any)
-	RowCreator = make(map[string]types.RowFn)
+	allColumns = make(dict.StringListMap)
+	columnAddress = make(dict.StringMap)
+	typeColumnFields = make(map[string]dict.StringMap)
+	rowCreator = make(map[string]CreateRowFn)
 }
 
-func UpdateColumnAddress(columns map[string]string) {
-	for k, v := range columns {
-		ColumnAddress[k] = v
-	}
+// Adds a createRowFn for the given typeName
+func AddRowCreator(typeName string, createRowFn CreateRowFn) {
+	rowCreator[typeName] = createRowFn
 }
 
-func InstanceOf[T any](t T) *T {
-	name := types.NameOf(t)
-	instance, ok := Instance[name]
+// Get the createRowFn associated with given typeName
+func GetRowCreator(typeName string) (CreateRowFn, bool) {
+	rowFn, ok := rowCreator[typeName]
+	return rowFn, ok
+}
+
+// Get type name and all column names of given object
+func TypeColumnsOf(item any) (string, []string) {
+	typeName := dyn.TypeOf(item)
+	columns, ok := allColumns[typeName]
 	if !ok {
-		return nil
+		columns = []string{}
 	}
-	return instance.(*T)
+	return typeName, columns
 }
 
-func ColumnsOf(schema any) []string {
-	name := types.NameOf(schema)
-	columns, ok := AllColumns[name]
-	if !ok {
-		return []string{}
-	}
+// Get all column names of given item
+func ColumnsOf(item any) []string {
+	_, columns := TypeColumnsOf(item)
 	return columns
 }
 
-func GetColumn(field any) string {
-	address := types.AddressOf(field)
-	return ColumnAddress[address]
+// Get column name of given field reference,
+// Field must be from the singleton object
+func GetColumn(fieldRef any) string {
+	address := dyn.AddressOf(fieldRef)
+	return columnAddress[address]
 }
 
-func GetColumns(fields ...any) []string {
-	numFields := len(fields)
+// Get column names of given field references,
+// Fields must be from the singleton object
+func GetColumns(fieldRefs ...any) []string {
+	numFields := len(fieldRefs)
 	columns := make([]string, 0, numFields)
-	for _, field := range fields {
-		column := GetColumn(field)
+	for _, fieldRef := range fieldRefs {
+		column := GetColumn(fieldRef)
 		if column != "" {
 			columns = append(columns, column)
 		}
 	}
 	if len(columns) != numFields {
-		return []string{}
+		// reset to empty list if not all columns were found
+		columns = []string{}
 	}
 	return columns
 }
 
-func GetFieldName(schema, column string) string {
-	if _, ok := ColumnField[schema]; !ok {
+// Get field name for given type name's column
+func GetFieldName(typeName, column string) string {
+	if !dict.HasKey(typeColumnFields, typeName) {
 		return ""
 	}
-	return ColumnField[schema][column]
+	return typeColumnFields[typeName][column]
 }

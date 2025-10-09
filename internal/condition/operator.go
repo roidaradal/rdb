@@ -1,9 +1,4 @@
-package op
-
-import (
-	"slices"
-	"strings"
-)
+package condition
 
 const (
 	Equal        string = "="
@@ -20,7 +15,3 @@ const (
 	Suffix       string = "SUFFIX"
 	Substring    string = "SUBSTRING"
 )
-
-func RepeatString(repeat int, item, glue string) string {
-	return strings.Join(slices.Repeat([]string{item}, repeat), glue)
-}
