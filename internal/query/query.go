@@ -76,6 +76,8 @@ func ExecTx(q Query, dbtx *sql.Tx, checker QueryResultChecker) (*sql.Result, err
 		err = errNoDBTx
 	} else if query == "" {
 		err = errEmptyQuery
+	} else if checker == nil {
+		err = errNoChecker
 	}
 	if err != nil {
 		return nil, Rollback(dbtx, err)

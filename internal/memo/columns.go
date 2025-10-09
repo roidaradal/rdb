@@ -54,9 +54,10 @@ func getAllColumns(structRef any) *columnsResult {
 
 	for i := range numFields {
 		structField := structType.Field(i)
+		fieldName := structField.Name
 		if structField.Anonymous {
 			// Embedded struct, get columns using recursion
-			embeddedStructRef := structValue.FieldByName(structField.Name).Addr().Interface()
+			embeddedStructRef := structValue.FieldByName(fieldName).Addr().Interface()
 			embedded := getAllColumns(embeddedStructRef)
 			result.columns = append(result.columns, embedded.columns...)
 			result.addressOf = dict.Update(result.addressOf, embedded.addressOf)
@@ -71,7 +72,7 @@ func getAllColumns(structRef any) *columnsResult {
 			fieldAddress := getFieldAddress(structValue, i)
 			result.columns = append(result.columns, column)
 			result.addressOf[fieldAddress] = column
-			result.columnFields[column] = structField.Name
+			result.columnFields[column] = fieldName
 		}
 	}
 	return result

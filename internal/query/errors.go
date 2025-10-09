@@ -3,6 +3,7 @@ package query
 import "errors"
 
 var (
+	errNoChecker           = errors.New("no result checker")
 	errNoDBConnection      = errors.New("no db connection")
 	errNoDBTx              = errors.New("no db transaction")
 	errNoReader            = errors.New("no row reader")

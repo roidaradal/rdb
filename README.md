@@ -10,6 +10,17 @@ Required call to initialize rdb library
 
 `err := rdb.Initialize()`
 
+### Type Definition
+By default, column name = field name; fields can be skipped or mapped to a custom column name
+
+```
+type Foo struct {
+    Field1      string                      // column name: Field1
+    Field2      string  `col:"CustomName"`  // column name is CustomName, instead of Field2
+    PrivField_  int     `col:"-"`           // skipped
+}
+```
+
 ### AddType
 Adds new type, pass in a struct pointer
 

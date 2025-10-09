@@ -46,8 +46,8 @@ func Reader[T any](columns ...string) RowReader[T] {
 }
 
 // Creates a RowReader for type T, using all columns
-func FullReader[T any](ref *T) RowReader[T] {
-	columns := memo.ColumnsOf(ref)
+func FullReader[T any](structRef *T) RowReader[T] {
+	columns := memo.ColumnsOf(structRef)
 	return Reader[T](columns...)
 }
 
