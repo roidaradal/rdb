@@ -12,6 +12,7 @@ import (
 // T = object type, K = key type, V = value type
 type LookupQuery[T any, K comparable, V any] struct {
 	optionalConditionQuery
+	typeName    string
 	keyColumn   string
 	valueColumn string
 	reader      row.RowReader[T]
@@ -19,7 +20,9 @@ type LookupQuery[T any, K comparable, V any] struct {
 
 // Initialize LookupQuery
 func (q *LookupQuery[T, K, V]) Initialize(table string, keyFieldRef *K, valueFieldRef *V) {
+	var t T
 	q.optionalConditionQuery.Initialize(table)
+	q.typeName = dyn.TypeOf(t)
 	columns := memo.GetColumns(keyFieldRef, valueFieldRef)
 	if len(columns) == 2 {
 		q.reader = row.Reader[T](columns...)
@@ -52,17 +55,13 @@ func (q LookupQuery[T, K, V]) Lookup(dbc *sql.DB) (map[K]V, error) {
 	defer rows.Close()
 
 	lookup := make(map[K]V)
-	typeName := ""
 	for rows.Next() {
 		item, err := q.reader(rows)
 		if err != nil {
 			continue
 		}
-		if typeName == "" {
-			typeName = dyn.TypeOf(item)
-		}
-		key, err1 := getColumnValue[K](item, typeName, q.keyColumn)
-		value, err2 := getColumnValue[V](item, typeName, q.valueColumn)
+		key, err1 := getColumnValue[K](item, q.typeName, q.keyColumn)
+		value, err2 := getColumnValue[V](item, q.typeName, q.valueColumn)
 		if err1 != nil || err2 != nil {
 			continue
 		}

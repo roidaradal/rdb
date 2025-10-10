@@ -2,14 +2,11 @@ package ze
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/roidaradal/rdb"
 )
 
-// ToggleParams
 type ToggleParams struct {
-	*DBTrio
 	IsActive bool   // required
 	ID       ID     // required for Toggle*ID
 	Code     string // required for Toggle*Code
@@ -17,50 +14,48 @@ type ToggleParams struct {
 }
 
 // ToggleID: schema.Table, by ID
-func (s Schema[T]) ToggleID(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, s.Table, true, false)
+func (s Schema[T]) ToggleID(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, s.Table, true, false)
 }
 
 // ToggleID: params.Table, by ID
-func (s Schema[T]) ToggleIDAt(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, p.Table, true, false)
+func (s Schema[T]) ToggleIDAt(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, p.Table, true, false)
 }
 
 // ToggleCode: schema.Table, by Code
-func (s Schema[T]) ToggleCode(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, s.Table, false, false)
+func (s Schema[T]) ToggleCode(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, s.Table, false, false)
 }
 
 // ToggleCode: params.Table, by Code
-func (s Schema[T]) ToggleCodeAt(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, p.Table, false, false)
+func (s Schema[T]) ToggleCodeAt(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, p.Table, false, false)
 }
 
 // ToggleTxID: schema.Table, transaction by ID
-func (s Schema[T]) ToggleTxID(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, s.Table, true, true)
+func (s Schema[T]) ToggleTxID(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, s.Table, true, true)
 }
 
 // ToggleTxID: params.Table, transaction by ID
-func (s Schema[T]) ToggleTxIDAt(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, p.Table, true, true)
+func (s Schema[T]) ToggleTxIDAt(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, p.Table, true, true)
 }
 
 // ToggleTxCode: schema.Table, transaction by Code
-func (s Schema[T]) ToggleTxCode(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, s.Table, false, true)
+func (s Schema[T]) ToggleTxCode(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, s.Table, false, true)
 }
 
 // ToggleTxCode: params.Table, transaction by Code
-func (s Schema[T]) ToggleTxCodeAt(p *ToggleParams) ([]string, error) {
-	return toggleAt(&s, p, p.Table, false, true)
+func (s Schema[T]) ToggleTxCodeAt(rq *Request, p *ToggleParams) error {
+	return toggleAt[T](rq, p, s.Name, p.Table, false, true)
 }
 
 // Common: create and execute UpdateQuery, which toggles IsActive true/false,
 // at given table, using ID/Code
-func toggleAt[T any](s *Schema[T], p *ToggleParams, table string, byID bool, isTx bool) ([]string, error) {
-	logs := make([]string, 0)
-
+func toggleAt[T any](rq *Request, p *ToggleParams, name, table string, byID bool, isTx bool) error {
 	// Check that params has ID or Code
 	hasIdentity := false
 	if byID && p.ID != 0 {
@@ -69,17 +64,18 @@ func toggleAt[T any](s *Schema[T], p *ToggleParams, table string, byID bool, isT
 		hasIdentity = true
 	}
 	if !hasIdentity {
-		logs = append(logs, "Incomplete ToggleParams")
-		return logs, errMissingParams
+		rq.AddLog("ID/Code to toggle is not set")
+		return errMissingParams
 	}
 	// Make sure Items schema is initialized
 	if Items == nil {
-		return logs, errMissingItems
+		rq.AddLog("Items schema is null")
+		return errMissingItems
 	}
 
 	// Build UpdateQuery using the Items schema
 	item := Items.Ref
-	q := rdb.NewUpdateQuery(table)
+	q := rdb.NewUpdateQuery[T](table)
 	var condition1 rdb.Condition
 	if byID {
 		condition1 = rdb.Equal(&item.ID, p.ID)
@@ -94,15 +90,16 @@ func toggleAt[T any](s *Schema[T], p *ToggleParams, table string, byID bool, isT
 	var result *sql.Result
 	var err error
 	if isTx {
-		result, err = rdb.ExecTx(q, p.DBTx, p.Checker)
+		rq.AddTxStep(q)
+		result, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
 	} else {
-		result, err = rdb.Exec(q, p.DB)
+		result, err = rdb.Exec(q, rq.DB)
 	}
 	if err != nil {
-		logs = append(logs, fmt.Sprintf("Failed to toggle %s", s.Name))
-		return logs, err
+		rq.AddFmtLog("Failed to toggle %s", name)
+		return err
 	}
 
-	logs = append(logs, fmt.Sprintf("Toggled: %d", rdb.RowsAffected(result)))
-	return logs, nil
+	rq.AddFmtLog("Toggled: %d", rdb.RowsAffected(result))
+	return nil
 }

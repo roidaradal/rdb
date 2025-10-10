@@ -9,6 +9,7 @@ var (
 	allColumns       dict.StringListMap        // {TypeName => []ColumnNames}
 	columnAddress    dict.StringMap            // {FieldAddress => ColumnName}
 	typeColumnFields map[string]dict.StringMap // {TypeName => {ColumnName => FieldName}}
+	typeFieldColumns map[string]dict.StringMap // {TypeName => {FieldName => ColumnName}}
 	rowCreator       map[string]CreateRowFn    // {TypeName => CreateRowFn}
 )
 
@@ -20,6 +21,7 @@ func Initialize() {
 	allColumns = make(dict.StringListMap)
 	columnAddress = make(dict.StringMap)
 	typeColumnFields = make(map[string]dict.StringMap)
+	typeFieldColumns = make(map[string]dict.StringMap)
 	rowCreator = make(map[string]CreateRowFn)
 }
 
@@ -81,4 +83,12 @@ func GetFieldName(typeName, column string) string {
 		return ""
 	}
 	return typeColumnFields[typeName][column]
+}
+
+// Get column name for given type name's field
+func GetColumnName(typeName, fieldName string) string {
+	if !dict.HasKey(typeFieldColumns, typeName) {
+		return ""
+	}
+	return typeFieldColumns[typeName][fieldName]
 }

@@ -2,46 +2,41 @@ package ze
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/roidaradal/rdb"
 )
 
-// DeleteParams
 type DeleteParams struct {
-	*DBTrio
 	Condition rdb.Condition // required
-	Table     string        // required for DeleteAt, DeleteTxAt
+	Table     string        // required for Delete*At
 }
 
 // DeleteQuery: schema.Table
-func (s Schema[T]) Delete(p *DeleteParams) ([]string, error) {
-	return deleteAt(&s, p, s.Table, false)
+func (s Schema[T]) Delete(rq *Request, p *DeleteParams) error {
+	return deleteAt(rq, p, s.Name, s.Table, false)
 }
 
 // DeleteQuery: params.Table
-func (s Schema[T]) DeleteAt(p *DeleteParams) ([]string, error) {
-	return deleteAt(&s, p, p.Table, false)
+func (s Schema[T]) DeleteAt(rq *Request, p *DeleteParams) error {
+	return deleteAt(rq, p, s.Name, p.Table, false)
 }
 
 // DeleteQuery Transaction: schema.Table
-func (s Schema[T]) DeleteTx(p *DeleteParams) ([]string, error) {
-	return deleteAt(&s, p, s.Table, true)
+func (s Schema[T]) DeleteTx(rq *Request, p *DeleteParams) error {
+	return deleteAt(rq, p, s.Name, s.Table, true)
 }
 
 // DeleteQuery Transaction: params.Table
-func (s Schema[T]) DeleteTxAt(p *DeleteParams) ([]string, error) {
-	return deleteAt(&s, p, p.Table, true)
+func (s Schema[T]) DeleteTxAt(rq *Request, p *DeleteParams) error {
+	return deleteAt(rq, p, s.Name, p.Table, true)
 }
 
 // Common: create and execute DeleteQuery at given table using condition
-func deleteAt[T any](s *Schema[T], p *DeleteParams, table string, isTx bool) ([]string, error) {
-	logs := make([]string, 0)
-
+func deleteAt(rq *Request, p *DeleteParams, name, table string, isTx bool) error {
 	// Check that condition is set
 	if p.Condition == nil {
-		logs = append(logs, "Incomplete DeleteParams")
-		return logs, errMissingParams
+		rq.AddLog("Delete condition is not set")
+		return errMissingParams
 	}
 
 	// Build DeleteQuery
@@ -52,15 +47,16 @@ func deleteAt[T any](s *Schema[T], p *DeleteParams, table string, isTx bool) ([]
 	var result *sql.Result
 	var err error
 	if isTx {
-		result, err = rdb.ExecTx(q, p.DBTx, p.Checker)
+		rq.AddTxStep(q)
+		result, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
 	} else {
-		result, err = rdb.Exec(q, p.DB)
+		result, err = rdb.Exec(q, rq.DB)
 	}
 	if err != nil {
-		logs = append(logs, fmt.Sprintf("Failed to delete %s", s.Name))
-		return logs, err
+		rq.AddFmtLog("Failed to delete %s", name)
+		return err
 	}
 
-	logs = append(logs, fmt.Sprintf("Deleted: %d", rdb.RowsAffected(result)))
-	return logs, nil
+	rq.AddFmtLog("Deleted: %d", rdb.RowsAffected(result))
+	return nil
 }

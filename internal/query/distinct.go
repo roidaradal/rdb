@@ -12,13 +12,16 @@ import (
 // T = object type, V = value type
 type DistinctValuesQuery[T any, V any] struct {
 	optionalConditionQuery
-	column string
-	reader row.RowReader[T]
+	typeName string
+	column   string
+	reader   row.RowReader[T]
 }
 
 // Initialize DistinctValuesQuery
 func (q *DistinctValuesQuery[T, V]) Initialize(table string, fieldRef *V) {
+	var t T
 	q.optionalConditionQuery.Initialize(table)
+	q.typeName = dyn.TypeOf(t)
 	q.column = memo.GetColumn(fieldRef)
 	q.reader = row.Reader[T](q.column)
 }
@@ -47,16 +50,12 @@ func (q DistinctValuesQuery[T, V]) Query(dbc *sql.DB) ([]V, error) {
 	defer rows.Close()
 
 	distinct := make([]V, 0)
-	typeName := ""
 	for rows.Next() {
 		item, err := q.reader(rows)
 		if err != nil {
 			continue
 		}
-		if typeName == "" {
-			typeName = dyn.TypeOf(item)
-		}
-		value, err := getColumnValue[V](item, typeName, q.column)
+		value, err := getColumnValue[V](item, q.typeName, q.column)
 		if err != nil {
 			continue
 		}

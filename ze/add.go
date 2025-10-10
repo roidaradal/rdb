@@ -2,17 +2,16 @@ package ze
 
 import (
 	"database/sql"
-	"fmt"
 
+	"github.com/roidaradal/fn"
 	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb"
 )
 
-// AddParams
 type AddParams[T any] struct {
-	*DBTrio
-	Item  *T     // required
+	Item  *T     // required for Insert*
+	Items []*T   // required for InsertRows*
 	Table string // required for Add*At
 }
 
@@ -40,54 +39,77 @@ func (s Schema[T]) ValidateNew(item *T) (*T, error) {
 }
 
 // InsertRowQuery: schema.Table
-func (s Schema[T]) Insert(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, s.Table, false, false)
+func (s Schema[T]) Insert(rq *Request, p *AddParams[T]) error {
+	_, err := insertAt(rq, p, s.Name, s.Table, false, false)
+	return err
 }
 
 // InsertRowQuery: params.Table
-func (s Schema[T]) InsertAt(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, p.Table, false, false)
+func (s Schema[T]) InsertAt(rq *Request, p *AddParams[T]) error {
+	_, err := insertAt(rq, p, s.Name, p.Table, false, false)
+	return err
 }
 
 // InsertRowQuery: schema.Table, with ID
-func (s Schema[T]) InsertID(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, s.Table, true, false)
+func (s Schema[T]) InsertID(rq *Request, p *AddParams[T]) (ID, error) {
+	return insertAt(rq, p, s.Name, s.Table, true, false)
 }
 
 // InsertRowQuery: params.Table, with ID
-func (s Schema[T]) InsertIDAt(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, p.Table, true, false)
+func (s Schema[T]) InsertIDAt(rq *Request, p *AddParams[T]) (ID, error) {
+	return insertAt(rq, p, s.Name, p.Table, true, false)
 }
 
-// InsertRowQuery: schema.Table
-func (s Schema[T]) InsertTx(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, s.Table, false, true)
+// InsertRowQuery: schema.Table, as transaction
+func (s Schema[T]) InsertTx(rq *Request, p *AddParams[T]) error {
+	_, err := insertAt(rq, p, s.Name, s.Table, false, true)
+	return err
 }
 
-// InsertRowQuery: params.Table
-func (s Schema[T]) InsertTxAt(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, p.Table, false, true)
+// InsertRowQuery: params.Table, as transaction
+func (s Schema[T]) InsertTxAt(rq *Request, p *AddParams[T]) error {
+	_, err := insertAt(rq, p, s.Name, p.Table, false, true)
+	return err
 }
 
-// InsertRowQuery: schema.Table, with ID
-func (s Schema[T]) InsertTxID(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, s.Table, true, true)
+// InsertRowQuery: schema.Table, with ID, as transaction
+func (s Schema[T]) InsertTxID(rq *Request, p *AddParams[T]) (ID, error) {
+	return insertAt(rq, p, s.Name, s.Table, true, true)
 }
 
-// InsertRowQuery: params.Table, with ID
-func (s Schema[T]) InsertTxIDAt(p *AddParams[T]) (ID, []string, error) {
-	return insertAt(&s, p, p.Table, true, true)
+// InsertRowQuery: params.Table, with ID, as transaction
+func (s Schema[T]) InsertTxIDAt(rq *Request, p *AddParams[T]) (ID, error) {
+	return insertAt(rq, p, s.Name, p.Table, true, true)
+}
+
+// InsertRowsQuery: schema.Table
+func (s Schema[T]) InsertRows(rq *Request, p *AddParams[T]) error {
+	return insertRowsAt(rq, p, s.Name, s.Table, false)
+}
+
+// InsertRowsQuery: params.Table
+func (s Schema[T]) InsertRowsAt(rq *Request, p *AddParams[T]) error {
+	return insertRowsAt(rq, p, s.Name, p.Table, false)
+}
+
+// InsertRowsQuery: schema.Table, as transaction
+func (s Schema[T]) InsertTxRows(rq *Request, p *AddParams[T]) error {
+	return insertRowsAt(rq, p, s.Name, s.Table, true)
+}
+
+// InsertRowsQuery: params.Table, as transaction
+func (s Schema[T]) InsertTxRowsAt(rq *Request, p *AddParams[T]) error {
+	return insertRowsAt(rq, p, s.Name, p.Table, true)
 }
 
 // Common: create and execute InsertRowQuery at given table
-func insertAt[T any](s *Schema[T], p *AddParams[T], table string, getID bool, isTx bool) (ID, []string, error) {
+func insertAt[T any](rq *Request, p *AddParams[T], name, table string, getID bool, isTx bool) (ID, error) {
 	var id ID = 0
-	logs := make([]string, 0)
 
 	// Check that item is not null
 	if p.Item == nil {
-		logs = append(logs, "Incomplete AddParams")
-		return id, logs, errMissingParams
+		rq.AddLog("Item to be added is null")
+		return id, errMissingParams
 	}
 
 	// Build InsertRowQuery
@@ -98,19 +120,21 @@ func insertAt[T any](s *Schema[T], p *AddParams[T], table string, getID bool, is
 	var result *sql.Result
 	var err error
 	if isTx {
-		result, err = rdb.ExecTx(q, p.DBTx, p.Checker)
+		rq.AddTxStep(q)
+		result, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
 	} else {
-		result, err = rdb.Exec(q, p.DB)
+		result, err = rdb.Exec(q, rq.DB)
 	}
 	if err != nil {
-		logs = append(logs, fmt.Sprintf("Failed to insert %s", s.Name))
-		return id, logs, err
+		rq.AddFmtLog("Failed to insert %s", name)
+		return id, err
 	}
+	rowsAffected := rdb.RowsAffected(result)
 
 	// If not transaction, check if rowsAffected is 1
-	if !isTx && rdb.RowsAffected(result) != 1 {
-		logs = append(logs, fmt.Sprintf("No %s inserted", s.Name))
-		return id, logs, errNoRowsInserted
+	if !isTx && rowsAffected != 1 {
+		rq.AddFmtLog("No %s inserted", name)
+		return id, errNoRowsInserted
 	}
 
 	// If getID flag is on, get the last insert ID
@@ -118,10 +142,51 @@ func insertAt[T any](s *Schema[T], p *AddParams[T], table string, getID bool, is
 		var ok bool
 		id, ok = rdb.LastInsertID(result)
 		if !ok {
-			logs = append(logs, fmt.Sprintf("Failed to get %s insertID", s.Name))
-			return id, logs, errNoLastInsertID
+			rq.AddFmtLog("Failed to get %s insertID", name)
+			return id, errNoLastInsertID
 		}
 	}
 
-	return id, logs, nil
+	rq.AddFmtLog("Added: %d", rowsAffected)
+	return id, nil
+}
+
+// Common: create and execute InsertRowsQuery at given table
+func insertRowsAt[T any](rq *Request, p *AddParams[T], name, table string, isTx bool) error {
+	// Check that items are set
+	if p.Items == nil {
+		rq.AddLog("Items to be added are not set")
+		return errMissingParams
+	}
+	numItems := len(p.Items)
+
+	// Build InsertRowsQuery
+	rows := fn.Map(p.Items, rdb.ToRow)
+	q := rdb.NewInsertRowsQuery(table)
+	q.Rows(rows)
+
+	// Execute InsertRowsQuery
+	var result *sql.Result
+	var err error
+	if isTx {
+		rq.AddTxStep(q)
+		checker := rdb.AssertRowsAffected(numItems)
+		result, err = rdb.ExecTx(q, rq.DBTx, checker)
+	} else {
+		result, err = rdb.Exec(q, rq.DB)
+	}
+	if err != nil {
+		rq.AddFmtLog("Failed to insert %d %s rows", numItems, name)
+		return err
+	}
+	rowsAffected := rdb.RowsAffected(result)
+
+	// If not transaction, check if rowsAffected == numItems
+	if !isTx && rowsAffected != numItems {
+		rq.AddFmtLog("Count mismatch: items = %d, rows = %d", numItems, rowsAffected)
+		return errMismatchCount
+	}
+
+	rq.AddFmtLog("Added: %d", rowsAffected)
+	return nil
 }

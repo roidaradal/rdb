@@ -12,13 +12,16 @@ import (
 // T = object type, V = value type
 type ValueQuery[T any, V any] struct {
 	conditionQuery
-	column string
-	reader row.RowReader[T]
+	typeName string
+	column   string
+	reader   row.RowReader[T]
 }
 
 // Initialize ValueQuery
 func (q *ValueQuery[T, V]) Initialize(table string, fieldRef *V) {
+	var t T
 	q.conditionQuery.Initialize(table)
+	q.typeName = dyn.TypeOf(t)
 	q.column = memo.GetColumn(fieldRef)
 	q.reader = row.Reader[T](q.column)
 }
@@ -46,9 +49,7 @@ func (q ValueQuery[T, V]) QueryValue(dbc *sql.DB) (V, error) {
 	if err != nil {
 		return v, err
 	}
-	var t T
-	typeName := dyn.TypeOf(t)
-	return getColumnValue[V](item, typeName, q.column)
+	return getColumnValue[V](item, q.typeName, q.column)
 }
 
 // Get the column value from given structRef and typeName

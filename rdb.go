@@ -88,3 +88,6 @@ var ExecTx = query.ExecTx
 
 // Rolls back the SQL transaction
 var Rollback = query.Rollback
+
+type FieldUpdate = query.FieldUpdate
+type FieldUpdates = query.FieldUpdates

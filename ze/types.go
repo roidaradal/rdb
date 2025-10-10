@@ -1,10 +1,7 @@
 package ze
 
 import (
-	"database/sql"
-
 	"github.com/roidaradal/fn/clock"
-	"github.com/roidaradal/rdb"
 )
 
 type ID = uint
@@ -65,11 +62,4 @@ func (x *Item) Initialize() {
 	x.ID = 0 // for auto-increment
 	x.CreatedAt = clock.DateTimeNow()
 	x.IsActive = true
-}
-
-// Trio: DB, DBTx, Checker
-type DBTrio struct {
-	DB      *sql.DB
-	DBTx    *sql.Tx
-	Checker rdb.QueryResultChecker
 }

@@ -18,6 +18,7 @@ const (
 type columnsResult struct {
 	columns      []string
 	columnFields dict.StringMap
+	fieldColumns dict.StringMap
 	addressOf    dict.StringMap
 }
 
@@ -32,6 +33,7 @@ func AddType(structRef any) error {
 	result := getAllColumns(structRef)
 	allColumns[typeName] = result.columns
 	typeColumnFields[typeName] = result.columnFields
+	typeFieldColumns[typeName] = result.fieldColumns
 	columnAddress = dict.Update(columnAddress, result.addressOf)
 	return nil
 }
@@ -41,6 +43,7 @@ func getAllColumns(structRef any) *columnsResult {
 	result := &columnsResult{
 		columns:      make([]string, 0),
 		columnFields: make(dict.StringMap),
+		fieldColumns: make(dict.StringMap),
 		addressOf:    make(dict.StringMap),
 	}
 
@@ -62,6 +65,7 @@ func getAllColumns(structRef any) *columnsResult {
 			result.columns = append(result.columns, embedded.columns...)
 			result.addressOf = dict.Update(result.addressOf, embedded.addressOf)
 			result.columnFields = dict.Update(result.columnFields, embedded.columnFields)
+			result.fieldColumns = dict.Update(result.fieldColumns, embedded.fieldColumns)
 		} else {
 			// Normal field
 			column := getColumnName(structField)
@@ -73,6 +77,7 @@ func getAllColumns(structRef any) *columnsResult {
 			result.columns = append(result.columns, column)
 			result.addressOf[fieldAddress] = column
 			result.columnFields[column] = fieldName
+			result.fieldColumns[fieldName] = column
 		}
 	}
 	return result

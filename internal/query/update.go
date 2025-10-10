@@ -4,28 +4,53 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/roidaradal/fn/dyn"
 	"github.com/roidaradal/rdb/internal/kv"
 )
 
-type UpdateQuery struct {
+type FieldUpdates = map[string]FieldUpdate
+type FieldUpdate [2]any // [Old, New]
+
+// Returns Old, New
+func (f FieldUpdate) Tuple() (any, any) {
+	return f[0], f[1]
+}
+
+type UpdateQuery[T any] struct {
 	conditionQuery
-	updates []*kv.Value
+	typeName string
+	updates  []*kv.Value
 }
 
 // Add query update (key = value),
 // Cannot be a method as generics are not supported in methods
-func Update[T any](q *UpdateQuery, fieldRef *T, value T) {
+func Update[T any, V any](q *UpdateQuery[T], fieldRef *V, value V) {
 	q.updates = append(q.updates, kv.KeyValue(fieldRef, value))
 }
 
 // Initialize UpdateQuery
-func (q *UpdateQuery) Initialize(table string) {
+func (q *UpdateQuery[T]) Initialize(table string) {
+	var t T
 	q.conditionQuery.Initialize(table)
+	q.typeName = dyn.TypeOf(t)
 	q.updates = make([]*kv.Value, 0)
 }
 
+// Add one column=value update
+func (q *UpdateQuery[T]) Update(fieldName string, value any) {
+	q.updates = append(q.updates, kv.ColumnValue(q.typeName, fieldName, value))
+}
+
+// Add list of column=value updates
+func (q *UpdateQuery[T]) Updates(updates FieldUpdates) {
+	for fieldName, update := range updates {
+		_, value := update.Tuple()
+		q.Update(fieldName, value)
+	}
+}
+
 // Build UpdateQuery
-func (q UpdateQuery) Build() (string, []any) {
+func (q UpdateQuery[T]) Build() (string, []any) {
 	numUpdates := len(q.updates)
 	condition, conditionValues, err := q.conditionQuery.preBuildCheck()
 	if err != nil || numUpdates == 0 {

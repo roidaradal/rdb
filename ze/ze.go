@@ -1,20 +1,49 @@
 package ze
 
-import "errors"
+import (
+	"database/sql"
+	"errors"
+
+	"github.com/roidaradal/rdb"
+)
 
 var (
+	errMismatchCount  = errors.New("count mismatch")
 	errMissingItems   = errors.New("items schema is not initialized")
-	errMissingParams  = errors.New("missing required parameters")
-	errMissingField   = errors.New("missing required field")
+	errNoDBConnection = errors.New("no db connection")
+	errNoDBTx         = errors.New("no db transaction")
 	errNoLastInsertID = errors.New("no last insert id")
 	errNoRowsInserted = errors.New("no rows inserted")
 )
 
-var Items *Schema[Item] = nil
+var (
+	errInvalidField  = errors.New("public: Invalid field")
+	errMissingParams = errors.New("public: Missing required parameters")
+	errMissingField  = errors.New("public: Missing required field")
+)
 
-// Initialize the ze package
-func Initialize() error {
+var (
+	Items  *Schema[Item] = nil
+	dbConn *sql.DB       = nil
+)
+
+// Initialize the ze package:
+// Creates the Items schema,
+// Initializes the db connection pool
+func Initialize(dbConnParams *rdb.SQLConnParams) error {
 	var err error
+
+	// Create Items schema
 	Items, err = NewSharedSchema(&Item{})
+	if err != nil {
+		return err
+	}
+
+	// Create db connection pool
+	dbConn, err = rdb.NewSQLConnection(dbConnParams)
+	if err != nil {
+		return err
+	}
+
 	return err
 }

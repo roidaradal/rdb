@@ -282,7 +282,9 @@ Creates a new UpdateQuery and adds field updates
 q := rdb.NewUpdateQuery(table)
 q.Where(Condition)
 rdb.Update(q, &item.Field1, value1)
-rdb.Update(q, &item.Field2, value2)
+rdb.Update(q, &item.Field2, value2) // or 
+q.Update(fieldName, value)
+q.Updates(map[fieldName]value)      // values = any type
 ```
 
 ### NewValueQuery 

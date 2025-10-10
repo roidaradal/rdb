@@ -24,6 +24,15 @@ func (l List) Tuple() (string, []any) {
 	return l.column, l.values
 }
 
+// Creates a new KeyValue pair, from fieldName => column
+func ColumnValue(typeName, fieldName string, value any) *Value {
+	column := memo.GetColumnName(typeName, fieldName)
+	if column == "" {
+		return nil
+	}
+	return &Value{column, value}
+}
+
 // Creates a new KeyValue pair
 func KeyValue[T any](key *T, value T) *Value {
 	column := memo.GetColumn(key)

@@ -26,14 +26,14 @@ func NewDeleteQuery(table string) *query.DeleteQuery {
 }
 
 // Creates a new UpdateQuery
-func NewUpdateQuery(table string) *query.UpdateQuery {
-	q := &query.UpdateQuery{}
+func NewUpdateQuery[T any](table string) *query.UpdateQuery[T] {
+	q := &query.UpdateQuery[T]{}
 	q.Initialize(table)
 	return q
 }
 
 // Add key = value update to UpdateQuery
-func Update[T any](q *query.UpdateQuery, fieldRef *T, value T) {
+func Update[T any, V any](q *query.UpdateQuery[T], fieldRef *V, value V) {
 	query.Update(q, fieldRef, value)
 }
 
