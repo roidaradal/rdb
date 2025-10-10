@@ -16,6 +16,7 @@ type Request struct {
 	DB      *sql.DB
 	DBTx    *sql.Tx
 	Checker rdb.QueryResultChecker
+	Status  int
 	start   DateTime
 	logs    []string
 	txSteps []rdb.Query

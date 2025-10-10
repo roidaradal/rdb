@@ -2,6 +2,7 @@ package ze
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/roidaradal/fn"
 	"github.com/roidaradal/fn/check"
@@ -16,9 +17,10 @@ type AddParams[T any] struct {
 }
 
 // Validate new item, check required fields, and apply transformations
-func (s Schema[T]) ValidateNew(item *T) (*T, error) {
+func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 	// Validate struct
 	if !check.IsValidStruct(item) {
+		rq.Status = http.StatusBadRequest
 		return nil, errMissingParams
 	}
 
@@ -30,6 +32,7 @@ func (s Schema[T]) ValidateNew(item *T) (*T, error) {
 		}
 		// Check if zero value
 		if dyn.IsZero(value) {
+			rq.Status = http.StatusBadRequest
 			return nil, errMissingField
 		}
 		// Update transformed field
@@ -109,6 +112,7 @@ func insertAt[T any](rq *Request, p *AddParams[T], name, table string, getID boo
 	// Check that item is not null
 	if p.Item == nil {
 		rq.AddLog("Item to be added is null")
+		rq.Status = http.StatusBadRequest
 		return id, errMissingParams
 	}
 
@@ -127,6 +131,7 @@ func insertAt[T any](rq *Request, p *AddParams[T], name, table string, getID boo
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to insert %s", name)
+		rq.Status = http.StatusInternalServerError
 		return id, err
 	}
 	rowsAffected := rdb.RowsAffected(result)
@@ -134,6 +139,7 @@ func insertAt[T any](rq *Request, p *AddParams[T], name, table string, getID boo
 	// If not transaction, check if rowsAffected is 1
 	if !isTx && rowsAffected != 1 {
 		rq.AddFmtLog("No %s inserted", name)
+		rq.Status = http.StatusInternalServerError
 		return id, errNoRowsInserted
 	}
 
@@ -143,11 +149,13 @@ func insertAt[T any](rq *Request, p *AddParams[T], name, table string, getID boo
 		id, ok = rdb.LastInsertID(result)
 		if !ok {
 			rq.AddFmtLog("Failed to get %s insertID", name)
+			rq.Status = http.StatusInternalServerError
 			return id, errNoLastInsertID
 		}
 	}
 
 	rq.AddFmtLog("Added: %d", rowsAffected)
+	rq.Status = http.StatusCreated
 	return id, nil
 }
 
@@ -156,6 +164,7 @@ func insertRowsAt[T any](rq *Request, p *AddParams[T], name, table string, isTx 
 	// Check that items are set
 	if p.Items == nil {
 		rq.AddLog("Items to be added are not set")
+		rq.Status = http.StatusBadRequest
 		return errMissingParams
 	}
 	numItems := len(p.Items)
@@ -177,6 +186,7 @@ func insertRowsAt[T any](rq *Request, p *AddParams[T], name, table string, isTx 
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to insert %d %s rows", numItems, name)
+		rq.Status = http.StatusInternalServerError
 		return err
 	}
 	rowsAffected := rdb.RowsAffected(result)
@@ -184,9 +194,11 @@ func insertRowsAt[T any](rq *Request, p *AddParams[T], name, table string, isTx 
 	// If not transaction, check if rowsAffected == numItems
 	if !isTx && rowsAffected != numItems {
 		rq.AddFmtLog("Count mismatch: items = %d, rows = %d", numItems, rowsAffected)
+		rq.Status = http.StatusInternalServerError
 		return errMismatchCount
 	}
 
 	rq.AddFmtLog("Added: %d", rowsAffected)
+	rq.Status = http.StatusCreated
 	return nil
 }

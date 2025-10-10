@@ -2,6 +2,7 @@ package ze
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
@@ -16,7 +17,7 @@ type UpdateParams struct {
 }
 
 // Get field updates by comparing existing object and patch object
-func (s Schema[T]) FieldUpdates(oldItem *T, patchItem dict.Object) (*T, rdb.FieldUpdates, error) {
+func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchItem dict.Object) (*T, rdb.FieldUpdates, error) {
 	updates := make(rdb.FieldUpdates)
 	for _, fieldName := range s.editable {
 		if !dict.HasKey(patchItem, fieldName) {
@@ -37,6 +38,7 @@ func (s Schema[T]) FieldUpdates(oldItem *T, patchItem dict.Object) (*T, rdb.Fiel
 
 	// Validate old item with updated values
 	if !check.IsValidStruct(oldItem) {
+		rq.Status = http.StatusBadRequest
 		return nil, nil, errInvalidField
 	}
 
@@ -68,6 +70,7 @@ func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool
 	// Check that condition and updates are set
 	if p.Condition == nil || p.Updates == nil {
 		rq.AddLog("Condition/updates not set")
+		rq.Status = http.StatusBadRequest
 		return errMissingParams
 	}
 
@@ -87,9 +90,11 @@ func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to update %s", name)
+		rq.Status = http.StatusInternalServerError
 		return err
 	}
 
 	rq.AddFmtLog("Updated: %d", rdb.RowsAffected(result))
+	rq.Status = http.StatusOK
 	return nil
 }

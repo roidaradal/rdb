@@ -2,6 +2,7 @@ package ze
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/roidaradal/rdb"
 )
@@ -36,6 +37,7 @@ func deleteAt(rq *Request, p *DeleteParams, name, table string, isTx bool) error
 	// Check that condition is set
 	if p.Condition == nil {
 		rq.AddLog("Delete condition is not set")
+		rq.Status = http.StatusBadRequest
 		return errMissingParams
 	}
 
@@ -54,9 +56,11 @@ func deleteAt(rq *Request, p *DeleteParams, name, table string, isTx bool) error
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to delete %s", name)
+		rq.Status = http.StatusInternalServerError
 		return err
 	}
 
 	rq.AddFmtLog("Deleted: %d", rdb.RowsAffected(result))
+	rq.Status = http.StatusOK
 	return nil
 }
