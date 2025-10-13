@@ -29,6 +29,13 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 		if transform, ok := s.transformers[fieldName]; ok {
 			newValue = transform(newValue)
 		}
+		// Check custom validator, if any
+		if validator, ok := s.validators[fieldName]; ok {
+			if !validator(newValue) {
+				rq.Status = http.StatusBadRequest
+				return nil, nil, errInvalidField
+			}
+		}
 		// Add field update if old and new values are not equal
 		if dyn.NotEqual(oldValue, newValue) {
 			updates[fieldName] = rdb.FieldUpdate{oldValue, newValue}

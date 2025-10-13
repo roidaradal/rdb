@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/roidaradal/rdb"
+	"github.com/roidaradal/rdb/internal/memo"
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 	dbConn *sql.DB       = nil
 )
 
-const Dot string = "."
+const Dot string = memo.Dot
 
 // Initialize the ze package:
 // Creates the Items schema,

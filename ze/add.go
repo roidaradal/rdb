@@ -30,6 +30,13 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 		if transform, ok := s.transformers[fieldName]; ok {
 			value = transform(value)
 		}
+		// Check custom validator, if any
+		if validator, ok := s.validators[fieldName]; ok {
+			if !validator(value) {
+				rq.Status = http.StatusBadRequest
+				return nil, errInvalidField
+			}
+		}
 		// Check if zero value
 		if dyn.IsZero(value) {
 			rq.Status = http.StatusBadRequest

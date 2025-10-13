@@ -16,7 +16,10 @@ type Schema[T any] struct {
 	required     []string
 	editable     []string
 	transformers map[string]memo.TransformFn
+	validators   map[string]ValidatorFn
 }
+
+type ValidatorFn = func(any) bool
 
 // Creates a new schema
 func NewSchema[T any](structRef *T, table string) (*Schema[T], error) {
@@ -37,6 +40,7 @@ func NewSchema[T any](structRef *T, table string) (*Schema[T], error) {
 		required:     fields.Required,
 		editable:     fields.Editable,
 		transformers: fields.Transformers,
+		validators:   make(map[string]ValidatorFn),
 	}
 	return schema, nil
 }
@@ -73,5 +77,25 @@ func AddTransformer[T any, V any](schema *Schema[T], fieldRef *V, transformKey s
 	fieldName := memo.GetFieldName(typeName, column)
 	if transform, ok := memo.Transformer(transformKey); ok {
 		schema.transformers[fieldName] = transform
+	}
+}
+
+// Add custom validator for schema field
+func AddValidator[T any, V any](schema *Schema[T], fieldRef *V, validator ValidatorFn) {
+	typeName := schema.Name
+	column := rdb.Column(fieldRef)
+	fieldName := memo.GetFieldName(typeName, column)
+	schema.validators[fieldName] = validator
+}
+
+// Creates a new string validator function
+func NewStringValidator(validator func(string) bool) ValidatorFn {
+	return func(item any) bool {
+		// assumes item is a string
+		text, ok := item.(string)
+		if !ok {
+			return false
+		}
+		return validator(text)
 	}
 }

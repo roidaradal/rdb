@@ -9,6 +9,8 @@ import (
 // Transforms a field value (any)
 type TransformFn = func(any) any
 
+const Dot string = "."
+
 var transformers = map[string]TransformFn{
 	"upper":    upper,
 	"lower":    lower,
@@ -52,7 +54,7 @@ func guardDot(item any) any {
 		return item
 	}
 	text = strings.TrimSpace(text)
-	return fn.Ternary(text == "", ".", text)
+	return fn.Ternary(text == "", Dot, text)
 }
 
 // Uppercase transform + default to '.' if empty string
