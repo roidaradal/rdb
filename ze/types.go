@@ -19,7 +19,7 @@ func (x UniqueItem) GetID() ID {
 
 // Embeddable Code property
 type CodedItem struct {
-	Code string
+	Code string `fx:"upper"`
 }
 
 func (x CodedItem) GetCode() string {

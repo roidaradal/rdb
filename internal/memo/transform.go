@@ -16,6 +16,12 @@ var transformers = map[string]TransformFn{
 	"lowerdot": lowerdot,
 }
 
+// Checks if key has associated transformer function
+func Transformer(key string) (TransformFn, bool) {
+	transform, ok := transformers[key]
+	return transform, ok
+}
+
 // Uppercase transform
 func upper(item any) any {
 	// assumes item is a string

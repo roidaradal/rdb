@@ -17,20 +17,20 @@ type UpdateParams struct {
 }
 
 // Get field updates by comparing existing object and patch object
-func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchItem dict.Object) (*T, rdb.FieldUpdates, error) {
+func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object) (*T, rdb.FieldUpdates, error) {
 	updates := make(rdb.FieldUpdates)
 	for _, fieldName := range s.editable {
-		if !dict.HasKey(patchItem, fieldName) {
+		if !dict.HasKey(patchObject, fieldName) {
 			continue // skip if fieldName is not in patch
 		}
-		newValue := patchItem[fieldName]
+		newValue := patchObject[fieldName]
 		oldValue := dyn.GetFieldValue(oldItem, fieldName)
 		// Apply transformer, if applicable
 		if transform, ok := s.transformers[fieldName]; ok {
 			newValue = transform(newValue)
 		}
 		// Add field update if old and new values are not equal
-		if dyn.AnyNotEqual(oldValue, newValue) {
+		if dyn.NotEqual(oldValue, newValue) {
 			updates[fieldName] = rdb.FieldUpdate{oldValue, newValue}
 			dyn.SetFieldValue(oldItem, fieldName, newValue)
 		}

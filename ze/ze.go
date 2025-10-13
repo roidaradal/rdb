@@ -27,6 +27,8 @@ var (
 	dbConn *sql.DB       = nil
 )
 
+const Dot string = "."
+
 // Initialize the ze package:
 // Creates the Items schema,
 // Initializes the db connection pool
