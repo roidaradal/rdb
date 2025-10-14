@@ -2,7 +2,6 @@ package ze
 
 import (
 	"database/sql"
-	"net/http"
 
 	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
@@ -32,7 +31,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 		// Check custom validator, if any
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(newValue) {
-				rq.Status = http.StatusBadRequest
+				rq.Status = Err400
 				return nil, nil, errInvalidField
 			}
 		}
@@ -45,7 +44,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 
 	// Validate old item with updated values
 	if !check.IsValidStruct(oldItem) {
-		rq.Status = http.StatusBadRequest
+		rq.Status = Err400
 		return nil, nil, errInvalidField
 	}
 
@@ -77,7 +76,7 @@ func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool
 	// Check that condition and updates are set
 	if p.Condition == nil || p.Updates == nil {
 		rq.AddLog("Condition/updates not set")
-		rq.Status = http.StatusBadRequest
+		rq.Status = Err400
 		return errMissingParams
 	}
 
@@ -97,11 +96,11 @@ func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to update %s", name)
-		rq.Status = http.StatusInternalServerError
+		rq.Status = Err500
 		return err
 	}
 
 	rq.AddFmtLog("Updated: %d", rdb.RowsAffected(result))
-	rq.Status = http.StatusOK
+	rq.Status = OK200
 	return nil
 }

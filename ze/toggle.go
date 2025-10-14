@@ -2,7 +2,6 @@ package ze
 
 import (
 	"database/sql"
-	"net/http"
 
 	"github.com/roidaradal/rdb"
 )
@@ -66,13 +65,13 @@ func toggleAt[T any](rq *Request, p *ToggleParams, name, table string, byID bool
 	}
 	if !hasIdentity {
 		rq.AddLog("ID/Code to toggle is not set")
-		rq.Status = http.StatusBadRequest
+		rq.Status = Err400
 		return errMissingParams
 	}
 	// Make sure Items schema is initialized
 	if Items == nil {
 		rq.AddLog("Items schema is null")
-		rq.Status = http.StatusInternalServerError
+		rq.Status = Err500
 		return errMissingItems
 	}
 
@@ -100,11 +99,11 @@ func toggleAt[T any](rq *Request, p *ToggleParams, name, table string, byID bool
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to toggle %s", name)
-		rq.Status = http.StatusInternalServerError
+		rq.Status = Err500
 		return err
 	}
 
 	rq.AddFmtLog("Toggled: %d", rdb.RowsAffected(result))
-	rq.Status = http.StatusOK
+	rq.Status = OK200
 	return nil
 }

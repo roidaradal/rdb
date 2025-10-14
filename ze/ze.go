@@ -3,6 +3,7 @@ package ze
 import (
 	"database/sql"
 	"errors"
+	"net/http"
 
 	"github.com/roidaradal/rdb"
 	"github.com/roidaradal/rdb/internal/memo"
@@ -29,6 +30,17 @@ var (
 )
 
 const Dot string = memo.Dot
+
+const (
+	OK200  = http.StatusOK                  // OK
+	OK201  = http.StatusCreated             // Created
+	Err400 = http.StatusBadRequest          // client-side error
+	Err401 = http.StatusUnauthorized        // unauthenticated
+	Err403 = http.StatusForbidden           // unauthorized
+	Err404 = http.StatusNotFound            // not found
+	Err429 = http.StatusTooManyRequests     // rate limiting
+	Err500 = http.StatusInternalServerError // server-side error
+)
 
 // Initialize the ze package:
 // Creates the Items schema,
