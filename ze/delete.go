@@ -6,35 +6,30 @@ import (
 	"github.com/roidaradal/rdb"
 )
 
-type DeleteParams struct {
-	Condition rdb.Condition // required
-	Table     string        // required for Delete*At
+// DeleteQuery at schema.Table
+func (s Schema[T]) Delete(rq *Request, condition rdb.Condition) error {
+	return deleteAt(rq, condition, s.Name, s.Table, false)
 }
 
-// DeleteQuery: schema.Table
-func (s Schema[T]) Delete(rq *Request, p *DeleteParams) error {
-	return deleteAt(rq, p, s.Name, s.Table, false)
+// DeleteQuery at table
+func (s Schema[T]) DeleteAt(rq *Request, condition rdb.Condition, table string) error {
+	return deleteAt(rq, condition, s.Name, table, false)
 }
 
-// DeleteQuery: params.Table
-func (s Schema[T]) DeleteAt(rq *Request, p *DeleteParams) error {
-	return deleteAt(rq, p, s.Name, p.Table, false)
+// DeleteQuery transaction at schema.Table
+func (s Schema[T]) DeleteTx(rqtx *Request, condition rdb.Condition) error {
+	return deleteAt(rqtx, condition, s.Name, s.Table, true)
 }
 
-// DeleteQuery Transaction: schema.Table
-func (s Schema[T]) DeleteTx(rq *Request, p *DeleteParams) error {
-	return deleteAt(rq, p, s.Name, s.Table, true)
-}
-
-// DeleteQuery Transaction: params.Table
-func (s Schema[T]) DeleteTxAt(rq *Request, p *DeleteParams) error {
-	return deleteAt(rq, p, s.Name, p.Table, true)
+// DeleteQuery transaction at table
+func (s Schema[T]) DeleteTxAt(rqtx *Request, condition rdb.Condition, table string) error {
+	return deleteAt(rqtx, condition, s.Name, table, true)
 }
 
 // Common: create and execute DeleteQuery at given table using condition
-func deleteAt(rq *Request, p *DeleteParams, name, table string, isTx bool) error {
+func deleteAt(rq *Request, condition rdb.Condition, name, table string, isTx bool) error {
 	// Check that condition is set
-	if p.Condition == nil {
+	if condition == nil {
 		rq.AddLog("Delete condition is not set")
 		rq.Status = Err400
 		return errMissingParams
@@ -42,7 +37,7 @@ func deleteAt(rq *Request, p *DeleteParams, name, table string, isTx bool) error
 
 	// Build DeleteQuery
 	q := rdb.NewDeleteQuery(table)
-	q.Where(p.Condition)
+	q.Where(condition)
 
 	// Execute DeleteQuery
 	var result *sql.Result

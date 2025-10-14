@@ -6,61 +6,68 @@ import (
 	"github.com/roidaradal/rdb"
 )
 
-type ToggleParams struct {
-	IsActive bool   // required
-	ID       ID     // required for Toggle*ID
-	Code     string // required for Toggle*Code
-	Table    string // required for Toggle*At
+type toggleParams struct {
+	isActive bool   // required
+	id       ID     // required for Toggle*ID
+	code     string // required for Toggle*Code
 }
 
-// ToggleID: schema.Table, by ID
-func (s Schema[T]) ToggleID(rq *Request, p *ToggleParams) error {
+// ToggleID at schema.Table
+func (s Schema[T]) ToggleID(rq *Request, id ID, isActive bool) error {
+	p := &toggleParams{id: id, isActive: isActive}
 	return toggleAt[T](rq, p, s.Name, s.Table, true, false)
 }
 
-// ToggleID: params.Table, by ID
-func (s Schema[T]) ToggleIDAt(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, p.Table, true, false)
+// ToggleID at table
+func (s Schema[T]) ToggleIDAt(rq *Request, id ID, isActive bool, table string) error {
+	p := &toggleParams{id: id, isActive: isActive}
+	return toggleAt[T](rq, p, s.Name, table, true, false)
 }
 
-// ToggleCode: schema.Table, by Code
-func (s Schema[T]) ToggleCode(rq *Request, p *ToggleParams) error {
+// ToggleCode at schema.Table
+func (s Schema[T]) ToggleCode(rq *Request, code string, isActive bool) error {
+	p := &toggleParams{code: code, isActive: isActive}
 	return toggleAt[T](rq, p, s.Name, s.Table, false, false)
 }
 
-// ToggleCode: params.Table, by Code
-func (s Schema[T]) ToggleCodeAt(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, p.Table, false, false)
+// ToggleCode at table
+func (s Schema[T]) ToggleCodeAt(rq *Request, code string, isActive bool, table string) error {
+	p := &toggleParams{code: code, isActive: isActive}
+	return toggleAt[T](rq, p, s.Name, table, false, false)
 }
 
-// ToggleTxID: schema.Table, transaction by ID
-func (s Schema[T]) ToggleTxID(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, s.Table, true, true)
+// ToggleID transaction at schema.Table
+func (s Schema[T]) ToggleTxID(rqtx *Request, id ID, isActive bool) error {
+	p := &toggleParams{id: id, isActive: isActive}
+	return toggleAt[T](rqtx, p, s.Name, s.Table, true, true)
 }
 
-// ToggleTxID: params.Table, transaction by ID
-func (s Schema[T]) ToggleTxIDAt(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, p.Table, true, true)
+// ToggleID transaction at table
+func (s Schema[T]) ToggleTxIDAt(rqtx *Request, id ID, isActive bool, table string) error {
+	p := &toggleParams{id: id, isActive: isActive}
+	return toggleAt[T](rqtx, p, s.Name, table, true, true)
 }
 
-// ToggleTxCode: schema.Table, transaction by Code
-func (s Schema[T]) ToggleTxCode(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, s.Table, false, true)
+// ToggleCode transaction at schema.Table
+func (s Schema[T]) ToggleTxCode(rqtx *Request, code string, isActive bool) error {
+	p := &toggleParams{code: code, isActive: isActive}
+	return toggleAt[T](rqtx, p, s.Name, s.Table, false, true)
 }
 
-// ToggleTxCode: params.Table, transaction by Code
-func (s Schema[T]) ToggleTxCodeAt(rq *Request, p *ToggleParams) error {
-	return toggleAt[T](rq, p, s.Name, p.Table, false, true)
+// ToggleCode transaction at table
+func (s Schema[T]) ToggleTxCodeAt(rqtx *Request, code string, isActive bool, table string) error {
+	p := &toggleParams{code: code, isActive: isActive}
+	return toggleAt[T](rqtx, p, s.Name, table, false, true)
 }
 
 // Common: create and execute UpdateQuery, which toggles IsActive true/false,
 // at given table, using ID/Code
-func toggleAt[T any](rq *Request, p *ToggleParams, name, table string, byID bool, isTx bool) error {
+func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool, isTx bool) error {
 	// Check that params has ID or Code
 	hasIdentity := false
-	if byID && p.ID != 0 {
+	if byID && p.id != 0 {
 		hasIdentity = true
-	} else if !byID && p.Code != "" {
+	} else if !byID && p.code != "" {
 		hasIdentity = true
 	}
 	if !hasIdentity {
@@ -80,13 +87,13 @@ func toggleAt[T any](rq *Request, p *ToggleParams, name, table string, byID bool
 	q := rdb.NewUpdateQuery[T](table)
 	var condition1 rdb.Condition
 	if byID {
-		condition1 = rdb.Equal(&item.ID, p.ID)
+		condition1 = rdb.Equal(&item.ID, p.id)
 	} else {
-		condition1 = rdb.Equal(&item.Code, p.Code)
+		condition1 = rdb.Equal(&item.Code, p.code)
 	}
-	condition2 := rdb.Equal(&item.IsActive, !p.IsActive)
+	condition2 := rdb.Equal(&item.IsActive, !p.isActive)
 	q.Where(rdb.And(condition1, condition2))
-	rdb.Update(q, &item.IsActive, p.IsActive)
+	rdb.Update(q, &item.IsActive, p.isActive)
 
 	// Execute UpdateQuery
 	var result *sql.Result

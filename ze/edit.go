@@ -9,12 +9,6 @@ import (
 	"github.com/roidaradal/rdb"
 )
 
-type UpdateParams struct {
-	Updates   rdb.FieldUpdates // required
-	Condition rdb.Condition    // required
-	Table     string           // required for Update*At
-}
-
 // Get field updates by comparing existing object and patch object
 func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object) (*T, rdb.FieldUpdates, error) {
 	updates := make(rdb.FieldUpdates)
@@ -51,30 +45,30 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 	return oldItem, updates, nil
 }
 
-// UpdateQuery: schema.Table
-func (s Schema[T]) Update(rq *Request, p *UpdateParams) error {
-	return updateAt[T](rq, p, s.Name, s.Table, false)
+// UpdateQuery at schema.Table
+func (s Schema[T]) Update(rq *Request, updates rdb.FieldUpdates, condition rdb.Condition) error {
+	return updateAt[T](rq, updates, condition, s.Name, s.Table, false)
 }
 
-// UpdateQuery: params.Table
-func (s Schema[T]) UpdateAt(rq *Request, p *UpdateParams) error {
-	return updateAt[T](rq, p, s.Name, p.Table, false)
+// UpdateQuery at table
+func (s Schema[T]) UpdateAt(rq *Request, updates rdb.FieldUpdates, condition rdb.Condition, table string) error {
+	return updateAt[T](rq, updates, condition, s.Name, table, false)
 }
 
-// UpdateQuery Transaction: schema.Table
-func (s Schema[T]) UpdateTx(rq *Request, p *UpdateParams) error {
-	return updateAt[T](rq, p, s.Name, s.Table, true)
+// UpdateQuery transaction at schema.Table
+func (s Schema[T]) UpdateTx(rqtx *Request, updates rdb.FieldUpdates, condition rdb.Condition) error {
+	return updateAt[T](rqtx, updates, condition, s.Name, s.Table, true)
 }
 
-// UpdateQuery Transaction: params.Table
-func (s Schema[T]) UpdateTxAt(rq *Request, p *UpdateParams) error {
-	return updateAt[T](rq, p, s.Name, p.Table, true)
+// UpdateQuery transaction at table
+func (s Schema[T]) UpdateTxAt(rqtx *Request, updates rdb.FieldUpdates, condition rdb.Condition, table string) error {
+	return updateAt[T](rqtx, updates, condition, s.Name, table, true)
 }
 
 // Common: create and execute UpdateQuery at given table
-func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool) error {
+func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condition, name, table string, isTx bool) error {
 	// Check that condition and updates are set
-	if p.Condition == nil || p.Updates == nil {
+	if condition == nil || updates == nil {
 		rq.AddLog("Condition/updates not set")
 		rq.Status = Err400
 		return errMissingParams
@@ -82,8 +76,8 @@ func updateAt[T any](rq *Request, p *UpdateParams, name, table string, isTx bool
 
 	// Build UpdateQuery
 	q := rdb.NewUpdateQuery[T](table)
-	q.Where(p.Condition)
-	q.Updates(p.Updates)
+	q.Where(condition)
+	q.Updates(updates)
 
 	// Execute UpdateQuery
 	var result *sql.Result
