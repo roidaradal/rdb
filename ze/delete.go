@@ -32,7 +32,7 @@ func deleteAt(rq *Request, condition rdb.Condition, name, table string, isTx boo
 	if condition == nil {
 		rq.AddLog("Delete condition is not set")
 		rq.Status = Err400
-		return errMissingParams
+		return ErrMissingParams
 	}
 
 	// Build DeleteQuery

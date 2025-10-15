@@ -14,7 +14,7 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 	// Validate struct
 	if !check.IsValidStruct(item) {
 		rq.Status = Err400
-		return nil, errMissingParams
+		return nil, ErrMissingParams
 	}
 
 	for _, fieldName := range s.required {
@@ -27,13 +27,13 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(value) {
 				rq.Status = Err400
-				return nil, errInvalidField
+				return nil, ErrInvalidField
 			}
 		}
 		// Check if zero value
 		if dyn.IsZero(value) {
 			rq.Status = Err400
-			return nil, errMissingField
+			return nil, ErrMissingField
 		}
 		// Update transformed field
 		dyn.SetFieldValue(item, fieldName, value)
@@ -113,7 +113,7 @@ func insertAt[T any](rq *Request, item *T, name, table string, getID bool, isTx 
 	if item == nil {
 		rq.AddLog("Item to be added is null")
 		rq.Status = Err400
-		return id, errMissingParams
+		return id, ErrMissingParams
 	}
 
 	// Build InsertRowQuery
@@ -165,7 +165,7 @@ func insertRowsAt[T any](rq *Request, items []*T, name, table string, isTx bool)
 	if items == nil {
 		rq.AddLog("Items to be added are not set")
 		rq.Status = Err400
-		return errMissingParams
+		return ErrMissingParams
 	}
 	numItems := len(items)
 

@@ -19,9 +19,10 @@ var (
 )
 
 var (
-	errInvalidField  = errors.New("public: Invalid field")
-	errMissingParams = errors.New("public: Missing required parameters")
-	errMissingField  = errors.New("public: Missing required field")
+	ErrInvalidField  = errors.New("public: Invalid field")
+	ErrMissingField  = errors.New("public: Missing required field")
+	ErrMissingParams = errors.New("public: Missing required parameters")
+	ErrMissingSchema = errors.New("schema is not initialized")
 )
 
 var (

@@ -73,7 +73,7 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 	if !hasIdentity {
 		rq.AddLog("ID/Code to toggle is not set")
 		rq.Status = Err400
-		return errMissingParams
+		return ErrMissingParams
 	}
 	// Make sure Items schema is initialized
 	if Items == nil {

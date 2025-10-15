@@ -26,7 +26,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(newValue) {
 				rq.Status = Err400
-				return nil, nil, errInvalidField
+				return nil, nil, ErrInvalidField
 			}
 		}
 		// Add field update if old and new values are not equal
@@ -39,7 +39,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 	// Validate old item with updated values
 	if !check.IsValidStruct(oldItem) {
 		rq.Status = Err400
-		return nil, nil, errInvalidField
+		return nil, nil, ErrInvalidField
 	}
 
 	return oldItem, updates, nil
@@ -71,7 +71,7 @@ func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condit
 	if condition == nil || updates == nil {
 		rq.AddLog("Condition/updates not set")
 		rq.Status = Err400
-		return errMissingParams
+		return ErrMissingParams
 	}
 
 	// Build UpdateQuery
