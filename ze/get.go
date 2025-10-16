@@ -2,7 +2,6 @@ package ze
 
 import (
 	"github.com/roidaradal/fn"
-	"github.com/roidaradal/fn/conv"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/rdb"
 )
@@ -30,12 +29,12 @@ func (s Schema[T]) GetOnlyAt(rq *Request, condition rdb.Condition, table string,
 }
 
 // SelectRowsQuery at schema.Table
-func (s Schema[T]) GetRows(rq *Request, condition rdb.Condition) ([]*T, error) {
+func (s Schema[T]) GetRows(rq *Request, condition rdb.Condition) ([]T, error) {
 	return selectRowsAt(rq, condition, s.Table, &s)
 }
 
 // SelectRowsQuery at table
-func (s Schema[T]) GetRowsAt(rq *Request, condition rdb.Condition, table string) ([]*T, error) {
+func (s Schema[T]) GetRowsAt(rq *Request, condition rdb.Condition, table string) ([]T, error) {
 	return selectRowsAt(rq, condition, table, &s)
 }
 
@@ -76,7 +75,7 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 }
 
 // Condition: create and execute SelectRowsQuery at given table
-func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) ([]*T, error) {
+func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) ([]T, error) {
 	// Build SelectRowsQuery and execute
 	q := rdb.NewFullSelectRowsQuery(table, schema.Reader)
 	if condition != nil {
@@ -90,8 +89,7 @@ func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, sch
 	}
 
 	rq.Status = OK200
-	itemRefs := fn.Map(items, conv.Ref)
-	return itemRefs, nil
+	return items, nil
 }
 
 // Common: Prune item with given fieldNames
@@ -104,11 +102,11 @@ func prune[T any](item T, err error, fieldNames ...string) (*dict.Object, error)
 }
 
 // Common: Prune items with given fieldNames
-func pruneRows[T any](items []*T, err error, fieldNames ...string) ([]*dict.Object, error) {
+func pruneRows[T any](items []T, err error, fieldNames ...string) ([]*dict.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	objs := fn.Map(items, func(item *T) *dict.Object {
+	objs := fn.Map(items, func(item T) *dict.Object {
 		return dict.Prune(item, fieldNames...)
 	})
 	return objs, nil

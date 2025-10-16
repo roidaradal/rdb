@@ -52,7 +52,7 @@ func FullReader[T any](structRef T) RowReader[T] {
 }
 
 // Converts given object to map[string]any for row insertion
-func ToRow[T any](structRef *T) dict.Object {
+func ToRow[T any](structRef T) dict.Object {
 	typeName := dyn.TypeOf(structRef)
 	rowFn, ok := memo.GetRowCreator(typeName)
 	if !ok {
