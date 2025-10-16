@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/roidaradal/fn v0.4.11
+	github.com/roidaradal/fn v0.4.13
 )
 
 require (

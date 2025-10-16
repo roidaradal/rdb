@@ -8,12 +8,12 @@ import (
 )
 
 // SelectRowQuery at schema.Table
-func (s Schema[T]) Get(rq *Request, condition rdb.Condition) (*T, error) {
+func (s Schema[T]) Get(rq *Request, condition rdb.Condition) (T, error) {
 	return selectRowAt(rq, condition, s.Table, &s)
 }
 
 // SelectRowQuery at table
-func (s Schema[T]) GetAt(rq *Request, condition rdb.Condition, table string) (*T, error) {
+func (s Schema[T]) GetAt(rq *Request, condition rdb.Condition, table string) (T, error) {
 	return selectRowAt(rq, condition, table, &s)
 }
 
@@ -52,12 +52,13 @@ func (s Schema[T]) GetRowsOnlyAt(rq *Request, condition rdb.Condition, table str
 }
 
 // Common: create and execute SelectRowQuery at given table
-func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) (*T, error) {
+func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) (T, error) {
+	var item T
 	// Check that condition is set
 	if condition == nil {
 		rq.AddLog("Condition is not set")
 		rq.Status = Err500
-		return nil, ErrMissingParams
+		return item, ErrMissingParams
 	}
 
 	// Build SelectRowQuery and execute
@@ -67,7 +68,7 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 	if err != nil {
 		rq.AddErrorLog(err)
 		rq.Status = Err500
-		return nil, err
+		return item, err
 	}
 
 	rq.Status = OK200
@@ -76,16 +77,11 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 
 // Condition: create and execute SelectRowsQuery at given table
 func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) ([]*T, error) {
-	// Check that condition is set
-	if condition == nil {
-		rq.AddLog("Condition is not set")
-		rq.Status = Err500
-		return nil, ErrMissingParams
-	}
-
 	// Build SelectRowsQuery and execute
 	q := rdb.NewFullSelectRowsQuery(table, schema.Reader)
-	q.Where(condition)
+	if condition != nil {
+		q.Where(condition)
+	}
 	items, err := q.Query(rq.DB)
 	if err != nil {
 		rq.AddErrorLog(err)
@@ -99,7 +95,7 @@ func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, sch
 }
 
 // Common: Prune item with given fieldNames
-func prune[T any](item *T, err error, fieldNames ...string) (*dict.Object, error) {
+func prune[T any](item T, err error, fieldNames ...string) (*dict.Object, error) {
 	if err != nil {
 		return nil, err
 	}

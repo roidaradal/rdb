@@ -19,15 +19,18 @@ var (
 )
 
 var (
+	ErrEmptyUpdate   = errors.New("public: Nothing to update")
+	ErrInactiveItem  = errors.New("public: Inactive item")
 	ErrInvalidField  = errors.New("public: Invalid field")
 	ErrMissingField  = errors.New("public: Missing required field")
 	ErrMissingParams = errors.New("public: Missing required parameters")
+	ErrNotFoundItem  = errors.New("public: Item not found")
 	ErrMissingSchema = errors.New("schema is not initialized")
 )
 
 var (
-	Items  *Schema[Item] = nil
-	dbConn *sql.DB       = nil
+	Items  *Schema[*Item] = nil
+	dbConn *sql.DB        = nil
 )
 
 const Dot string = memo.Dot
@@ -62,4 +65,12 @@ func Initialize(dbConnParams *rdb.SQLConnParams) error {
 	}
 
 	return err
+}
+
+// Get Items schema
+func ItemsRef() *Item {
+	if Items == nil {
+		return nil
+	}
+	return Items.Ref
 }

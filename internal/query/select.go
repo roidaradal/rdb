@@ -100,10 +100,11 @@ func (q SelectRowsQuery[T]) Build() (string, []any) {
 }
 
 // Execute the SelectRowQuery and get the object
-func (q SelectRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
+func (q SelectRowQuery[T]) QueryRow(dbc *sql.DB) (T, error) {
+	var item T
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
-		return nil, err
+		return item, err
 	}
 	row := dbc.QueryRow(query, values...)
 	return q.reader(row)
@@ -124,10 +125,10 @@ func (q SelectRowsQuery[T]) Query(dbc *sql.DB) ([]T, error) {
 	items := make([]T, 0)
 	for rows.Next() {
 		item, err := q.reader(rows)
-		if err != nil || item == nil {
+		if err != nil {
 			continue
 		}
-		items = append(items, *item)
+		items = append(items, item)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err

@@ -10,7 +10,7 @@ import (
 
 type Schema[T any] struct {
 	Name         string
-	Ref          *T
+	Ref          T
 	Table        string
 	Reader       rdb.RowReader[T]
 	required     []string
@@ -22,7 +22,7 @@ type Schema[T any] struct {
 type ValidatorFn = func(any) bool
 
 // Creates a new schema
-func NewSchema[T any](structRef *T, table string) (*Schema[T], error) {
+func NewSchema[T any](structRef T, table string) (*Schema[T], error) {
 	// Add rdb type
 	err := rdb.AddType(structRef)
 	if err != nil {
@@ -46,7 +46,7 @@ func NewSchema[T any](structRef *T, table string) (*Schema[T], error) {
 }
 
 // Creates a new shared schema (no table)
-func NewSharedSchema[T any](structRef *T) (*Schema[T], error) {
+func NewSharedSchema[T any](structRef T) (*Schema[T], error) {
 	return NewSchema(structRef, "")
 }
 
