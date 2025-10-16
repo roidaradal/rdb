@@ -10,11 +10,11 @@ import (
 )
 
 // Validate new item, check required fields, and apply transformations
-func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
+func (s Schema[T]) ValidateNew(rq *Request, item T) (T, error) {
 	// Validate struct
 	if !check.IsValidStruct(item) {
 		rq.Status = Err400
-		return nil, ErrMissingParams
+		return item, ErrMissingParams
 	}
 
 	for _, fieldName := range s.required {
@@ -27,13 +27,13 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(value) {
 				rq.Status = Err400
-				return nil, ErrInvalidField
+				return item, ErrInvalidField
 			}
 		}
 		// Check if zero value
 		if dyn.IsZero(value) {
 			rq.Status = Err400
-			return nil, ErrMissingField
+			return item, ErrMissingField
 		}
 		// Update transformed field
 		dyn.SetFieldValue(item, fieldName, value)

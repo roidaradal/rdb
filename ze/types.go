@@ -63,3 +63,8 @@ func (x *Item) Initialize() {
 	x.CreatedAt = clock.DateTimeNow()
 	x.IsActive = true
 }
+
+// Set ID of item
+func (x *Item) SetID(id ID) {
+	x.ID = id
+}
