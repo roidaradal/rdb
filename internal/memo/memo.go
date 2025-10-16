@@ -1,6 +1,8 @@
 package memo
 
 import (
+	"github.com/roidaradal/fn"
+	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/dyn"
 )
@@ -75,6 +77,17 @@ func GetColumns(fieldRefs ...any) []string {
 		columns = []string{}
 	}
 	return columns
+}
+
+// Get field names of given field references,
+// Fields must be from the singleton object
+func GetFields(typeName string, fieldRefs ...any) []string {
+	columns := GetColumns(fieldRefs...)
+	fields := fn.Map(columns, func(column string) string {
+		return GetFieldName(typeName, column)
+	})
+	fields = fn.Filter(fields, check.NotEmptyString)
+	return fields
 }
 
 // Get field name for given type name's column

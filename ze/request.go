@@ -27,13 +27,14 @@ func NewRequest(name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
-	if dbConn == nil {
-		return nil, errNoDBConnection
-	}
 	rq := &Request{
 		DB:    dbConn,
 		start: clock.DateTimeNow(),
 		logs:  make([]string, 0),
+	}
+	if dbConn == nil {
+		rq.Status = Err500
+		return rq, errNoDBConnection
 	}
 	return rq, nil
 }
@@ -72,11 +73,13 @@ func (rq *Request) AddTxStep(q rdb.Query) {
 func (rq *Request) StartTransaction(numSteps int) error {
 	if rq.DB == nil {
 		rq.AddLog("No DB connection")
+		rq.Status = Err500
 		return errNoDBConnection
 	}
 	dbtx, err := rq.DB.Begin()
 	if err != nil {
 		rq.AddLog("Failed to start transaction")
+		rq.Status = Err500
 		return err
 	}
 	rq.DBTx = dbtx
@@ -89,10 +92,12 @@ func (rq *Request) StartTransaction(numSteps int) error {
 func (rq *Request) CommitTransaction() error {
 	if rq.DB == nil {
 		rq.AddLog("No DB connection")
+		rq.Status = Err500
 		return errNoDBConnection
 	}
 	if rq.DBTx == nil {
 		rq.AddLog("No DB transaction")
+		rq.Status = Err500
 		return errNoDBTx
 	}
 	err := rq.DBTx.Commit()
@@ -101,6 +106,7 @@ func (rq *Request) CommitTransaction() error {
 			rq.AddFmtLog("Query %d: %s", i+1, rdb.QueryString(q))
 		}
 		rq.AddLog("Failed to commit transaction")
+		rq.Status = Err500
 		return fmt.Errorf("dbtx commit error: %w", err)
 	}
 	return nil

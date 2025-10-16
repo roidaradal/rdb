@@ -27,19 +27,16 @@ func AddType(structRef any) error {
 }
 
 // Get all column names of given item
-func AllColumns(item any) []string {
-	return memo.ColumnsOf(item)
-}
+var AllColumns = memo.ColumnsOf
 
 // Get column name of given field pointer
-func Column(fieldRef any) string {
-	return memo.GetColumn(fieldRef)
-}
+var Column = memo.GetColumn
 
 // Get column names of given field pointers
-func Columns(fieldRefs ...any) []string {
-	return memo.GetColumns(fieldRefs...)
-}
+var Columns = memo.GetColumns
+
+// Get field names of given field pointers
+var Fields = memo.GetFields
 
 // Function that reads row values into object
 type RowReader[T any] = row.RowReader[T]

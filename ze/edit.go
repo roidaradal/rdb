@@ -70,7 +70,7 @@ func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condit
 	// Check that condition and updates are set
 	if condition == nil || updates == nil {
 		rq.AddLog("Condition/updates not set")
-		rq.Status = Err400
+		rq.Status = Err500
 		return ErrMissingParams
 	}
 

@@ -1,5 +1,7 @@
 # RDB
-A Go library for type-safe SQL database queries
+A Go library for type-safe SQL database queries.
+
+Also contains the ze package: for Schema objects
 
 `go get github.com/roidaradal/rdb/...`
 
@@ -64,6 +66,12 @@ Get column names of given field pointers,
 Fields must be from the object used in AddType 
 
 `columns := rdb.Columns(&item.Field1, &item.Field2, &item.Field3)`
+
+### Fields 
+Get field names of given field pointers, 
+Fields must be from the object used in AddType 
+
+`fields := rdb.Fields(&item.Field1, &item.Field2)`
 
 ### _type:_ RowReader[T]
 Function that reads row values into object
@@ -335,3 +343,173 @@ Executes an SQL query as part of a transaction, applies Rollback on any errors
 Rolls back the SQL transaction
 
 `err := rdb.Rollback(*sql.Tx, err)`
+
+## Ze
+
+### Initialize 
+
+`err := ze.Initialize(*rdb.SQLConnParams)`
+
+### Constants, Errors, and Status Codes 
+
+* ze.Dot = "." 
+* _error_: ze.ErrInvalidField
+* _error_: ze.ErrMissingField
+* _error_: ze.ErrMissingParams
+* _error_: ze.ErrMissingSchema
+* _status_: ze.OK200 (OK)
+* _status_: ze.OK201 (Created)
+* _status_: ze.Err400 (Missing client parameters)
+* _status_: ze.Err401 (Unauthenticated)
+* _status_: ze.Err403 (Unauthorized)
+* _status_: ze.Err404 (Not Found)
+* _status_: ze.Err429 (Rate limited)
+* _status_: ze.Err500 (Server-side Error)
+
+### Types 
+
+* ID
+* DateTime 
+* Date 
+* UniqueItem    : ID 
+* CodedItem     : Code 
+* CreatedItem   : CreatedAt 
+* ActiveItem    : IsActive
+* Identity      : ID, Code   
+* Item          : ID, Code, IsActive, CreatedAt  
+
+### _type_: Request 
+Application request that holds DB connection, transaction, checker, 
+transaction queries, request start time, and logs
+
+```
+var rq *Request
+rq, err := NewRequest(name string, args ...any)
+rq.AddLog(message)
+rq.AddFmtLog(format, args ...any)
+rq.AddDurationLog(time.Time)
+rq.AddErrorLog(error)
+rq.AddTxStep(rdb.Query)
+err := rq.StartTransaction(numSteps int)
+err := rq.CommitTransaction()
+output := rq.Output()
+```
+
+### _type_: Schema[T]
+Schema object for given type
+
+```
+schema, err := NewSchema[T](&T{}, table)
+schema, err := NewSharedSchema[T](&T{})
+AddRequiredField(schema, &item.Field)
+AddEditableField(schema, &item.Field)
+AddTransformer(schema, &item.Field, transformKey)
+
+var validator ValidatorFn
+validator = NewStringValidator(func(string) bool)
+AddValidator(schema, &item.Field, validator)
+```
+
+Available transformer keys:
+* upper
+* lower 
+* upperdot 
+* lowerdot
+
+### schema.ValidateNew 
+
+`item, err := schema.ValidateNew(*Request, item *T)`
+
+### schema.Insert
+
+```
+err := schema.Insert(*Request, *T)
+err := schema.InsertAt(*Request, *T, table string)
+id, err := schema.InsertID(*Request, *T)
+id, err := schema.InsertIDAt(*Request, *T, table string)
+
+err := schema.InsertTx(rqtx *Request, *T)
+err := schema.InsertTxAt(rqtx *Request, *T, table string)
+id, err := schema.InsertTxID(rqtx *Request, *T)
+id, err := schema.InsertTxIDAt(rqtx *Request, *T, table string)
+```
+
+### schema.InsertRows
+
+```
+err := schema.InsertRows(*Request, []*T)
+err := schema.InsertRowsAt(*Request, []*T, table string)
+
+err := schema.InsertTxRows(rqtx *Request, []*T)
+err := schema.InsertTxRowsAt(rqtx *Request, []*T, table string)
+```
+
+### schema.Delete 
+
+```
+err := schema.Delete(*Request, rdb.Condition)
+err := schema.DeleteAt(*Request, rdb.Condition, table string)
+
+err := schema.DeleteTx(rqtx *Request, rdb.Condition)
+err := schema.DeleteTxAt(rqtx *Request, rdb.Condition, table string)
+```
+
+### schema.Toggle 
+
+```
+err := schema.ToggleID(*Request, id ID, isActive bool)
+err := schema.ToggleIDAt(*Request, id ID, isActive bool, table string)
+err := schema.ToggleCode(*Request, code string, isActive bool)
+err := schema.ToggleCodeAt(*Request, code string, isActive bool, table string)
+
+err := schema.ToggleTxID(rqtx *Request, id ID, isActive bool)
+err := schema.ToggleTxIDAt(rqtx *Request, id ID, isActive bool, table string)
+err := schema.ToggleTxCode(rqtx *Request, code string, isActive bool)
+err := schema.ToggleTxCodeAt(rqtx *Request, code string, isActive bool, table string)
+```
+
+### schema.FieldUpdates 
+
+```
+var oldItem *T 
+var fieldUpdates rdb.FieldUpdates 
+
+oldItem, fieldUpdates, err := schema.FieldUpdates(*Request, oldItem, patchObject dict.Object)
+```
+
+### schema.Update 
+
+```
+err := schema.Update(*Request, rdb.FieldUpdates, rdb.Condition)
+err := schema.UpdateAt(*Request, rdb.FieldUpdates, rdb.Condition, table string)
+
+err := schema.UpdateTx(rqtx *Request, rdb.FieldUpdates, rdb.Condition)
+err := schema.UpdateTxAt(rqtx *Request, rdb.FieldUpdates, rdb.Condition, table string)
+```
+
+### schema.Get 
+
+```
+var item *T
+var obj *dict.Object 
+
+item, err := schema.Get(*Request, rdb.Condition)
+item, err := schema.GetAt(*Request, rdb.Condition, table string)
+
+obj, err := schema.GetOnly(*Request, rdb.Condition, fieldNames ...string)
+obj, err := schema.GetOnlyAt(*Request, rdb.Condition, table string, fieldNames ...string)
+```
+
+
+### schema.GetRows
+
+```
+var items []*T 
+var objs []*dict.Object 
+
+items, err := schema.GetRows(*Request, rdb.Condition)
+items, err := schema.GetRowsAt(*Request, rdb.Condition, table string)
+
+objs, err := schema.GetRowsOnly(*Request, rdb.Condition, fieldNames ...string)
+objs, err := schema.GetRowsOnlyAt(*Request, rdb.Condition, table string, fieldNames ...string)
+```
