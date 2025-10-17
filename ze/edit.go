@@ -10,7 +10,7 @@ import (
 )
 
 // Get field updates by comparing existing object and patch object
-func (s Schema[T]) FieldUpdates(rq *Request, oldItem T, patchObject dict.Object) (T, rdb.FieldUpdates, error) {
+func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object) (*T, rdb.FieldUpdates, error) {
 	updates := make(rdb.FieldUpdates)
 	for _, fieldName := range s.editable {
 		if !dict.HasKey(patchObject, fieldName) {
@@ -26,7 +26,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem T, patchObject dict.Object)
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(newValue) {
 				rq.Status = Err400
-				return oldItem, nil, ErrInvalidField
+				return nil, nil, ErrInvalidField
 			}
 		}
 		// Add field update if old and new values are not equal
@@ -39,7 +39,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem T, patchObject dict.Object)
 	// Validate old item with updated values
 	if !check.IsValidStruct(oldItem) {
 		rq.Status = Err400
-		return oldItem, nil, ErrInvalidField
+		return nil, nil, ErrInvalidField
 	}
 
 	return oldItem, updates, nil

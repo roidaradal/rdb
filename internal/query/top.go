@@ -87,11 +87,10 @@ func (q TopValueQuery[T, V]) Build() (string, []any) {
 }
 
 // Execute the TopRowQuery and  get the top object
-func (q TopRowQuery[T]) QueryRow(dbc *sql.DB) (T, error) {
-	var item T
+func (q TopRowQuery[T]) QueryRow(dbc *sql.DB) (*T, error) {
 	query, values, err := preReadCheck(q, dbc, q.reader)
 	if err != nil {
-		return item, err
+		return nil, err
 	}
 	row := dbc.QueryRow(query, values...)
 	return q.reader(row)

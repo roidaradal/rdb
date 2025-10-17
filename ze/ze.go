@@ -29,8 +29,8 @@ var (
 )
 
 var (
-	Items  *Schema[*Item] = nil
-	dbConn *sql.DB        = nil
+	Items  *Schema[Item] = nil
+	dbConn *sql.DB       = nil
 )
 
 const Dot string = memo.Dot

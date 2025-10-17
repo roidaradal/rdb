@@ -47,7 +47,7 @@ func Reader[T any](columns ...string) RowReader[T] {
 }
 
 // Creates a RowReader[T] using all columns
-func FullReader[T any](structRef T) RowReader[T] {
+func FullReader[T any](structRef *T) RowReader[T] {
 	return row.FullReader(structRef)
 }
 
