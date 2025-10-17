@@ -50,6 +50,28 @@ func (s Schema[T]) GetRowsOnlyAt(rq *Request, condition rdb.Condition, table str
 	return pruneRows(items, err)
 }
 
+// SelectRowsQuery (all) at schema.Table
+func (s Schema[T]) GetAllRows(rq *Request) ([]*T, error) {
+	return selectRowsAt(rq, nil, s.Table, &s)
+}
+
+// SelectRowsQuery (all) at table
+func (s Schema[T]) GetAllRowsAt(rq *Request, table string) ([]*T, error) {
+	return selectRowsAt(rq, nil, table, &s)
+}
+
+// SelectRowsQuery (all) at schema.Table with pruning
+func (s Schema[T]) GetAllRowsOnly(rq *Request, fieldNames ...string) ([]*dict.Object, error) {
+	items, err := selectRowsAt(rq, nil, s.Table, &s)
+	return pruneRows(items, err)
+}
+
+// SelectRowsQuery (all) at table with pruning
+func (s Schema[T]) GetAllRowsOnlyAt(rq *Request, table string, fieldNames ...string) ([]*dict.Object, error) {
+	items, err := selectRowsAt(rq, nil, table, &s)
+	return pruneRows(items, err)
+}
+
 // Common: create and execute SelectRowQuery at given table
 func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) (*T, error) {
 	// Check that condition is set
