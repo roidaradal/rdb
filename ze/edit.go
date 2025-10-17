@@ -95,6 +95,5 @@ func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condit
 	}
 
 	rq.AddFmtLog("Updated: %d", rdb.RowsAffected(result))
-	rq.Status = OK200
 	return nil
 }

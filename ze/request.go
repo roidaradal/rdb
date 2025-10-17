@@ -13,6 +13,7 @@ import (
 // Application request that holds DB connection, transaction, checker,
 // transaction queries, request start time, and logs
 type Request struct {
+	Task
 	DB      *sql.DB
 	DBTx    *sql.Tx
 	Checker rdb.QueryResultChecker
@@ -22,15 +23,27 @@ type Request struct {
 	txSteps []rdb.Query
 }
 
+// Contains the Action and Item of the task
+type Task struct {
+	Action string
+	Item   string
+}
+
+// Combine the "Action-Item" of CoreTask
+func (t Task) FullAction() string {
+	return fmt.Sprintf("%s-%s", t.Action, t.Item)
+}
+
 // Creates a new Request
 func NewRequest(name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
 	rq := &Request{
-		DB:    dbConn,
-		start: clock.DateTimeNow(),
-		logs:  make([]string, 0),
+		DB:     dbConn,
+		Status: OK200,
+		start:  clock.DateTimeNow(),
+		logs:   make([]string, 0),
 	}
 	if dbConn == nil {
 		rq.Status = Err500

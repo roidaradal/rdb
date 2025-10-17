@@ -11,7 +11,6 @@ import (
 
 var (
 	errMismatchCount  = errors.New("count mismatch")
-	errMissingItems   = errors.New("items schema is not initialized")
 	errNoDBConnection = errors.New("no db connection")
 	errNoDBTx         = errors.New("no db transaction")
 	errNoLastInsertID = errors.New("no last insert id")

@@ -91,7 +91,6 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 		return nil, err
 	}
 
-	rq.Status = OK200
 	return item, nil
 }
 
@@ -109,7 +108,6 @@ func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, sch
 		return nil, err
 	}
 
-	rq.Status = OK200
 	return items, nil
 }
 

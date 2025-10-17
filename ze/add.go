@@ -112,7 +112,6 @@ func insertAt[T any](rq *Request, item *T, name, table string, getID bool, isTx 
 	// Check that item is not null
 	if item == nil {
 		rq.AddLog("Item to be added is null")
-		rq.Status = Err400
 		return id, ErrMissingParams
 	}
 
@@ -164,7 +163,6 @@ func insertRowsAt[T any](rq *Request, items []*T, name, table string, isTx bool)
 	// Check that items are set
 	if items == nil {
 		rq.AddLog("Items to be added are not set")
-		rq.Status = Err400
 		return ErrMissingParams
 	}
 	numItems := len(items)

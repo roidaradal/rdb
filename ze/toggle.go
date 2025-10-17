@@ -72,14 +72,12 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 	}
 	if !hasIdentity {
 		rq.AddLog("ID/Code to toggle is not set")
-		rq.Status = Err400
 		return ErrMissingParams
 	}
 	// Make sure Items schema is initialized
 	if Items == nil {
 		rq.AddLog("Items schema is null")
-		rq.Status = Err500
-		return errMissingItems
+		return ErrMissingSchema
 	}
 
 	// Build UpdateQuery using the Items schema
@@ -111,6 +109,5 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 	}
 
 	rq.AddFmtLog("Toggled: %d", rdb.RowsAffected(result))
-	rq.Status = OK200
 	return nil
 }
