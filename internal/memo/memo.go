@@ -92,7 +92,7 @@ func GetFields(typeName string, fieldRefs ...any) []string {
 
 // Get field name for given type name's column
 func GetFieldName(typeName, column string) string {
-	if !dict.HasKey(typeColumnFields, typeName) {
+	if dict.NoKey(typeColumnFields, typeName) {
 		return ""
 	}
 	return typeColumnFields[typeName][column]
@@ -100,7 +100,7 @@ func GetFieldName(typeName, column string) string {
 
 // Get column name for given type name's field
 func GetColumnName(typeName, fieldName string) string {
-	if !dict.HasKey(typeFieldColumns, typeName) {
+	if dict.NoKey(typeFieldColumns, typeName) {
 		return ""
 	}
 	return typeFieldColumns[typeName][fieldName]

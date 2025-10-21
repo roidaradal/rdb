@@ -13,7 +13,7 @@ import (
 func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object) (*T, rdb.FieldUpdates, error) {
 	updates := make(rdb.FieldUpdates)
 	for _, fieldName := range s.editable {
-		if !dict.HasKey(patchObject, fieldName) {
+		if dict.NoKey(patchObject, fieldName) {
 			continue // skip if fieldName is not in patch
 		}
 		newValue := patchObject[fieldName]

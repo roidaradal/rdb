@@ -31,7 +31,7 @@ func Reader[T any](columns ...string) RowReader[T] {
 			if column == "" {
 				continue // skip blank columns
 			}
-			fieldRef, ok := getColumnField(x, typeName, column)
+			fieldRef, ok := getColumnField(&x, typeName, column)
 			if !ok {
 				continue // skip if column field not found
 			}
