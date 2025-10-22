@@ -1,8 +1,6 @@
 package ze
 
 import (
-	"database/sql"
-
 	"github.com/roidaradal/rdb"
 )
 
@@ -94,13 +92,12 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 	rdb.Update(q, &item.IsActive, p.isActive)
 
 	// Execute UpdateQuery
-	var result *sql.Result
 	var err error
 	if isTx {
 		rq.AddTxStep(q)
-		result, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
+		_, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
 	} else {
-		result, err = rdb.Exec(q, rq.DB)
+		_, err = rdb.Exec(q, rq.DB)
 	}
 	if err != nil {
 		rq.AddFmtLog("Failed to toggle %s", name)
@@ -108,6 +105,6 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 		return err
 	}
 
-	rq.AddFmtLog("Toggled: %d", rdb.RowsAffected(result))
+	// rq.AddFmtLog("Toggled: %d %s", rdb.RowsAffected(result), name)
 	return nil
 }

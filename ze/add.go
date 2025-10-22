@@ -153,7 +153,7 @@ func insertAt[T any](rq *Request, item *T, name, table string, getID bool, isTx 
 		}
 	}
 
-	rq.AddFmtLog("Added: %d", rowsAffected)
+	// rq.AddFmtLog("Added: %d %s", rowsAffected, name)
 	rq.Status = OK201
 	return id, nil
 }
@@ -196,7 +196,7 @@ func insertRowsAt[T any](rq *Request, items []*T, name, table string, isTx bool)
 		return errMismatchCount
 	}
 
-	rq.AddFmtLog("Added: %d", rowsAffected)
+	rq.AddFmtLog("Added: %d %s", rowsAffected, name)
 	rq.Status = OK201
 	return nil
 }

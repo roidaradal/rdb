@@ -94,6 +94,9 @@ func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condit
 		return err
 	}
 
-	rq.AddFmtLog("Updated: %d", rdb.RowsAffected(result))
+	rowsAffected := rdb.RowsAffected(result)
+	if rowsAffected != 1 {
+		rq.AddFmtLog("Updated: %d %s", rowsAffected, name)
+	}
 	return nil
 }

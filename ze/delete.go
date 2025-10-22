@@ -54,6 +54,9 @@ func deleteAt(rq *Request, condition rdb.Condition, name, table string, isTx boo
 		return err
 	}
 
-	rq.AddFmtLog("Deleted: %d", rdb.RowsAffected(result))
+	rowsAffected := rdb.RowsAffected(result)
+	if rowsAffected != 1 {
+		rq.AddFmtLog("Deleted: %d %s", rowsAffected, name)
+	}
 	return nil
 }
