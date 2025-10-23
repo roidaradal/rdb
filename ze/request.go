@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/roidaradal/fn/clock"
+	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/rdb"
 )
 
@@ -14,6 +15,7 @@ import (
 // transaction queries, request start time, and logs
 type Request struct {
 	Task
+	Params  dict.Object
 	DB      *sql.DB
 	DBTx    *sql.Tx
 	Checker rdb.QueryResultChecker
@@ -41,6 +43,7 @@ func NewRequest(name string, args ...any) (*Request, error) {
 	}
 	rq := &Request{
 		DB:     dbConn,
+		Params: make(dict.Object),
 		Status: OK200,
 		start:  clock.DateTimeNow(),
 		logs:   make([]string, 0),
