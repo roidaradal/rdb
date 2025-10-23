@@ -35,6 +35,9 @@ var Column = memo.GetColumn
 // Get column names of given field pointers
 var Columns = memo.GetColumns
 
+// Get field name of given field pointer
+var Field = memo.GetField
+
 // Get field names of given field pointers
 var Fields = memo.GetFields
 

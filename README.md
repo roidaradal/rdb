@@ -67,11 +67,17 @@ Fields must be from the object used in AddType
 
 `columns := rdb.Columns(&item.Field1, &item.Field2, &item.Field3)`
 
+### Field 
+Get field name of given field pointer, 
+Field must be from the object used in AddType
+
+`field := rdb.Field(typeName, &item.Field)`
+
 ### Fields 
 Get field names of given field pointers, 
 Fields must be from the object used in AddType 
 
-`fields := rdb.Fields(&item.Field1, &item.Field2)`
+`fields := rdb.Fields(typeName, &item.Field1, &item.Field2)`
 
 ### _type:_ RowReader[T]
 Function that reads row values into object

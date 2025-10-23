@@ -79,6 +79,13 @@ func GetColumns(fieldRefs ...any) []string {
 	return columns
 }
 
+// Get field name of given field reference,
+// Field must be from the singleton object
+func GetField(typeName string, fieldRef any) string {
+	column := GetColumn(fieldRef)
+	return GetFieldName(typeName, column)
+}
+
 // Get field names of given field references,
 // Fields must be from the singleton object
 func GetFields(typeName string, fieldRefs ...any) []string {

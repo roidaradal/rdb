@@ -86,7 +86,6 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 	q.Where(condition)
 	item, err := q.QueryRow(rq.DB)
 	if err != nil {
-		rq.AddErrorLog(err)
 		rq.Status = Err500
 		return nil, err
 	}
@@ -103,7 +102,6 @@ func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, sch
 	}
 	items, err := q.Query(rq.DB)
 	if err != nil {
-		rq.AddErrorLog(err)
 		rq.Status = Err500
 		return nil, err
 	}
