@@ -401,6 +401,18 @@ err := rq.CommitTransaction()
 output := rq.Output()
 ```
 
+### ReqGet 
+
+`item, ok := ReqGet[T](*Request, key string)`
+
+### ReqGetRef 
+
+`itemRef := ReqGetRef[T](*Request, key string)`
+
+### ReqGetListRef
+
+`listRef := ReqGetListRef[T](*Request, key string)`
+
 ### _type_: Schema[T]
 Schema object for given type
 
