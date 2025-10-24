@@ -74,10 +74,10 @@ func (rq *Request) Output() string {
 }
 
 // Concurrent-safe merging of logs
-func (rq *Request) AddLogs(logs ...string) {
+func (rq *Request) MergeLogs(srq *Request) {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
-	rq.logs = append(rq.logs, logs...)
+	rq.logs = append(rq.logs, srq.logs...)
 }
 
 // Add log to request
