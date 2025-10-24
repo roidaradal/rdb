@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/roidaradal/fn"
 	"github.com/roidaradal/fn/clock"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/rdb"
@@ -54,6 +53,17 @@ func NewRequest(name string, args ...any) (*Request, error) {
 		return rq, errNoDBConnection
 	}
 	return rq, nil
+}
+
+// Creates a sub-request for concurrent tasks
+func (rq Request) SubRequest() *Request {
+	return &Request{
+		Task:   rq.Task,
+		Params: rq.Params,
+		DB:     rq.DB,
+		Status: OK200,
+		logs:   make([]string, 0),
+	}
 }
 
 // Combines the logs with newline
@@ -132,21 +142,4 @@ func (rq *Request) CommitTransaction() error {
 // Creates a message log with current datetime as prefix
 func nowLog(message string) string {
 	return fmt.Sprintf("%s | %s", clock.DateTimeNow(), message)
-}
-
-// Get value = rq.Params[key], then type coerce into T
-func ReqGet[T any](rq *Request, key string) (T, bool) {
-	return dict.ValueAs[T](rq.Params, key)
-}
-
-// Get value = rq.Params[key], then type coerce into *T
-func ReqGetRef[T any](rq *Request, key string) *T {
-	itemRef, ok := dict.ValueAs[*T](rq.Params, key)
-	return fn.Ternary(ok, itemRef, nil)
-}
-
-// Get value = rq.Params[key], then type coerce into []*T
-func ReqGetListRef[T any](rq *Request, key string) []*T {
-	listRef, ok := dict.ValueAs[[]*T](rq.Params, key)
-	return fn.Ternary(ok, listRef, nil)
 }
