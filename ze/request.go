@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/roidaradal/fn/clock"
@@ -23,6 +24,7 @@ type Request struct {
 	start   DateTime
 	logs    []string
 	txSteps []rdb.Query
+	mu      sync.Mutex
 }
 
 // Contains the Action and Item of the task
@@ -56,7 +58,7 @@ func NewRequest(name string, args ...any) (*Request, error) {
 }
 
 // Creates a sub-request for concurrent tasks
-func (rq Request) SubRequest() *Request {
+func (rq *Request) SubRequest() *Request {
 	return &Request{
 		Task:   rq.Task,
 		Params: rq.Params,
@@ -67,8 +69,15 @@ func (rq Request) SubRequest() *Request {
 }
 
 // Combines the logs with newline
-func (rq Request) Output() string {
+func (rq *Request) Output() string {
 	return strings.Join(rq.logs, "\n")
+}
+
+// Concurrent-safe merging of logs
+func (rq *Request) AddLogs(logs ...string) {
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+	rq.logs = append(rq.logs, logs...)
 }
 
 // Add log to request
