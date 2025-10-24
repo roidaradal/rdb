@@ -9,13 +9,17 @@ import (
 
 	"github.com/roidaradal/fn/clock"
 	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/str"
 	"github.com/roidaradal/rdb"
 )
+
+const actionGlue string = "-"
 
 // Application request that holds DB connection, transaction, checker,
 // transaction queries, request start time, and logs
 type Request struct {
 	Task
+	Name    string
 	Params  dict.Object
 	DB      *sql.DB
 	DBTx    *sql.Tx
@@ -24,7 +28,7 @@ type Request struct {
 	start   DateTime
 	logs    []string
 	txSteps []rdb.Query
-	mu      sync.Mutex
+	mu      sync.RWMutex
 }
 
 // Contains the Action and Item of the task
@@ -33,17 +37,13 @@ type Task struct {
 	Item   string
 }
 
-// Combine the "Action-Item" of CoreTask
-func (t Task) FullAction() string {
-	return fmt.Sprintf("%s-%s", t.Action, t.Item)
-}
-
 // Creates a new Request
 func NewRequest(name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
 	rq := &Request{
+		Name:   name,
 		DB:     dbConn,
 		Params: make(dict.Object),
 		Status: OK200,
@@ -151,4 +151,18 @@ func (rq *Request) CommitTransaction() error {
 // Creates a message log with current datetime as prefix
 func nowLog(message string) string {
 	return fmt.Sprintf("%s | %s", clock.DateTimeNow(), message)
+}
+
+// Combine the "Action-Item" of CoreTask
+func (t Task) FullAction() string {
+	return fmt.Sprintf("%s-%s", t.Action, itemPrefix(t.Item))
+}
+
+// Gets the core item name, removes trailing "%s" if any
+func itemPrefix(item string) string {
+	if !strings.HasSuffix(item, "%s") {
+		return item
+	}
+	parts := str.CleanSplit(item, actionGlue)
+	return strings.Join(parts[:len(parts)-1], actionGlue)
 }
