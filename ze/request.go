@@ -26,9 +26,10 @@ type Request struct {
 	Checker rdb.QueryResultChecker
 	Status  int
 	start   DateTime
-	logs    []string
 	txSteps []rdb.Query
-	mu      sync.RWMutex
+
+	mu   sync.RWMutex
+	logs []string
 }
 
 // Contains the Action and Item of the task

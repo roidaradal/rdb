@@ -68,3 +68,8 @@ func (x *Item) Initialize() {
 func (x *Item) SetID(id ID) {
 	x.ID = id
 }
+
+// Set IsActive of item
+func (x *Item) SetIsActive(isActive bool) {
+	x.IsActive = isActive
+}
