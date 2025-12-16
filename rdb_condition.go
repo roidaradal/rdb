@@ -5,6 +5,11 @@ import "github.com/roidaradal/rdb/internal/condition"
 // Condition interface
 type Condition = condition.Condition
 
+// Create MatchAll condition
+func NoCondition() *condition.MatchAll {
+	return &condition.MatchAll{}
+}
+
 // Create Equal condition
 func Equal[T any](fieldRef *T, value T) *condition.Value {
 	return condition.NewValue(fieldRef, value, condition.Equal)
@@ -68,9 +73,4 @@ func And(conditions ...Condition) *condition.Multi {
 // Create Or condition
 func Or(conditions ...Condition) *condition.Multi {
 	return condition.NewMulti(condition.Or, conditions...)
-}
-
-// Create NoCondition (match all)
-func NoCondition() *condition.MatchAll {
-	return &condition.MatchAll{}
 }

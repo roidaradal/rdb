@@ -1,93 +1,86 @@
+// Package rdb contains types and functions to perform type-safe SQL queries
 package rdb
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/go-sql-driver/mysql"
+	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
-	"github.com/roidaradal/fn/dyn"
-	"github.com/roidaradal/rdb/internal/memo"
-	"github.com/roidaradal/rdb/internal/query"
-	"github.com/roidaradal/rdb/internal/row"
+	"github.com/roidaradal/rdb/internal/rdb"
 )
 
 // Initialize rdb package
 func Initialize() error {
-	memo.Initialize()
+	rdb.Initialize()
 	return nil
 }
 
-// Add a new type, extract its columns and fields, create its RowCreator
-// StructRef is expected to be a struct pointer
-func AddType(structRef any) error {
-	err := memo.AddType(structRef)
+// Parameters for SQL connection
+type SQLConnParams struct {
+	Host     string `validate:"required"`
+	Port     string `validate:"required"`
+	Username string `validate:"required"`
+	Password string `validate:"required"`
+	Database string `validate:"required"`
+}
+
+// Create new MySQL DB connection pool
+func NewSQLConnection(p *SQLConnParams) (*sql.DB, error) {
+	if p == nil {
+		return nil, errors.New("sql connection params are not set")
+	}
+	if check.NotValidStruct(p) {
+		return nil, errors.New("missing required sql conn params")
+	}
+	dbAddr := fmt.Sprintf("%s:%s", p.Host, p.Port)
+	dbCfg := mysql.Config{
+		User:                 p.Username,
+		Passwd:               p.Password,
+		Net:                  "tcp",
+		Addr:                 dbAddr,
+		DBName:               p.Database,
+		AllowNativePasswords: true,
+	}
+	dbc, err := sql.Open("mysql", dbCfg.FormatDSN())
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("cannot open db conn: %w", err)
 	}
-	typeName, allColumns := memo.TypeColumnsOf(structRef)
-	memo.AddRowCreator(typeName, row.Creator(allColumns))
-	return nil
+	err = dbc.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("cannot ping db conn: %w", err)
+	}
+	return dbc, nil
 }
 
-// Get all column names of given item
-var AllColumns = memo.ColumnsOf
+// Add new type, extract its columns and fields, create RowCreator.
+// StructRef is expected to be a struct pointer
+var AddType = rdb.AddType
 
-// Get column name of given field pointer
-var Column = memo.GetColumn
+var (
+	AllColumns = rdb.ColumnsOf      // Get all column names of given item's type
+	Column     = rdb.GetColumnName  // Get column name of given field pointer
+	Columns    = rdb.GetColumnNames // Get column names of given field pointers
+	Field      = rdb.GetFieldName   // Get field name of given field pointer
+	Fields     = rdb.GetFieldNames  // Get field names of given field pointers
+)
 
-// Get column names of given field pointers
-var Columns = memo.GetColumns
+// Function that reads row values into struct
+type RowReader[T any] = rdb.RowReader[T]
 
-// Get field name of given field pointer
-var Field = memo.GetField
-
-// Get field names of given field pointers
-var Fields = memo.GetFields
-
-// Function that reads row values into object
-type RowReader[T any] = row.RowReader[T]
-
-// Creates a RowReader[T] with the given columns
-func Reader[T any](columns ...string) RowReader[T] {
-	return row.Reader[T](columns...)
+// Create new RowReader[T] with given columns
+func NewReader[T any](columns ...string) RowReader[T] {
+	return rdb.NewReader[T](columns...)
 }
 
-// Creates a RowReader[T] using all columns
+// Create new RowReader[T] wusing all columns
 func FullReader[T any](structRef *T) RowReader[T] {
-	return row.FullReader(structRef)
+	return rdb.FullReader(structRef)
 }
 
-// Converts given object to map[string]any for row insertion
-func ToRow[T any](structRef T) dict.Object {
-	typeName := dyn.TypeOf(structRef)
-	rowFn, ok := memo.GetRowCreator(typeName)
-	if !ok {
-		return dict.Object{}
-	}
-	return rowFn(structRef)
+// Convert given struct to map[string]any for row insertion
+func ToRow[T any](structRef *T) dict.Object {
+	return rdb.ToRow(structRef)
 }
-
-// Function that checks SQL result if a condition has been satisfied
-type QueryResultChecker = query.QueryResultChecker
-
-// Gets the number of rows affected from SQL result (default: 0)
-var RowsAffected = query.RowsAffected
-
-// Gets the last insert ID (uint) from SQL result (default: 0)
-var LastInsertID = query.LastInsertID
-
-// QueryResultChecker that does nothing
-var AssertNothing = query.AssertNothing
-
-// Creates a QueryResultChecker that asserts the number of rows affected
-var AssertRowsAffected = query.AssertRowsAffected
-
-// Executes an SQL query
-var Exec = query.Exec
-
-// Executes an SQL query as part of a transaction,
-// Applies Rollback on any errors
-var ExecTx = query.ExecTx
-
-// Rolls back the SQL transaction
-var Rollback = query.Rollback
-
-type FieldUpdate = query.FieldUpdate
-type FieldUpdates = query.FieldUpdates

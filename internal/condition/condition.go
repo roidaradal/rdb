@@ -1,41 +1,57 @@
+// Package condition contains types and functions to build query conditions
 package condition
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/roidaradal/rdb/internal/kv"
+	"github.com/roidaradal/rdb/internal/rdb"
 )
 
-// Condition object only needs to implement the Build() method
+// Condition object needs to implement the Build() method
+// to output the condition string and the parameter values
 type Condition interface {
-	// condition string, values []any
-	Build() (string, []any)
+	Build() (string, []any) // Return (condition string, parameter values)
 }
 
-// No Condition; used as default for UPDATE, DELETE
-type None struct{}
+// Missing Condition; default for UPDATE, DELETE to ensure condition is set
+// Equivalent to 'WHERE false'
+type Missing struct{}
 
-// Implement Condition interface for condition.None
-func (c None) Build() (string, []any) {
+// MatchAll Condition; default for SELECT (no condition)
+// Equivalent to 'WHERE true'
+type MatchAll struct{}
+
+// Value Condition, uses KeyValue (one value)
+type Value struct {
+	pair     *rdb.Value
+	operator string
+}
+
+// List Condition, uses KeyList (multiple values)
+type List struct {
+	pair         *rdb.List
+	listOperator string
+	soloOperator string
+}
+
+// Multi Condition for joining multiple conditions through AND, OR
+type Multi struct {
+	conditions []Condition // Multiple conditions
+	operator   string      // Join operator
+}
+
+// Build Missing condition
+func (c Missing) Build() (string, []any) {
 	return falseConditionValues()
 }
 
-// Match All Condition; used as default for SELECT
-type MatchAll struct{}
-
-// Implement Condition interface for condition.MatchAll
+// Build MatchAll condition
 func (c MatchAll) Build() (string, []any) {
 	return trueConditionValues()
 }
 
-// Value Condition; uses kv.Value (one value)
-type Value struct {
-	pair *kv.Value
-	op   string
-}
-
-// Implement Condition interface for condition.Value
+// Build Value condition
 func (c Value) Build() (string, []any) {
 	if c.pair == nil {
 		// no pair = false condition
@@ -46,22 +62,10 @@ func (c Value) Build() (string, []any) {
 		// no column = false condition
 		return falseConditionValues()
 	}
-	return soloConditionValues(column, c.op, value)
+	return soloConditionValues(column, c.operator, value)
 }
 
-// Creates a new condition.Value
-func NewValue[T any](fieldRef *T, value T, op string) *Value {
-	return &Value{kv.KeyValue(fieldRef, value), op}
-}
-
-// List Condition; uses kv.List (multiple values)
-type List struct {
-	pair   *kv.List
-	listOp string
-	soloOp string
-}
-
-// Implement Condition interface for condition.List
+// Build List condition
 func (c List) Build() (string, []any) {
 	if c.pair == nil {
 		// no pair = false condition
@@ -73,24 +77,13 @@ func (c List) Build() (string, []any) {
 		// no column or no values = false condition
 		return falseConditionValues()
 	} else if numValues == 1 {
-		return soloConditionValues(column, c.soloOp, values[0])
+		return soloConditionValues(column, c.soloOperator, values[0])
 	} else {
-		return listCondition(column, c.listOp, numValues), values
+		return listCondition(column, c.listOperator, numValues), values
 	}
 }
 
-// Creates a new condition.List
-func NewList[T any](fieldRef *T, values []T, listOp, soloOp string) *List {
-	return &List{kv.KeyList(fieldRef, values), listOp, soloOp}
-}
-
-// Multi Condition; multiple conditions (AND, OR)
-type Multi struct {
-	conditions []Condition
-	op         string
-}
-
-// Implement Condition interface for condition.Multi
+// Build Multi condition
 func (c Multi) Build() (string, []any) {
 	numConditions := len(c.conditions)
 	switch numConditions {
@@ -106,19 +99,30 @@ func (c Multi) Build() (string, []any) {
 		for i, condition := range c.conditions {
 			conditionString, values := condition.Build()
 			if conditionString == falseCondition {
-				// If any of the conditions failed, return false condition
+				// If any condition fails, return false condition immediately
 				return falseConditionValues()
 			}
 			conditions[i] = conditionString
 			allValues = append(allValues, values...)
 		}
-		glue := fmt.Sprintf(" %s ", c.op)
-		fullCondition := fmt.Sprintf("(%s)", strings.Join(conditions, glue)) // join by operator and wrap in parentheses
+		// Join by operator and wrap in parentheses
+		glue := fmt.Sprintf(" %s ", c.operator)
+		fullCondition := fmt.Sprintf("(%s)", strings.Join(conditions, glue))
 		return fullCondition, allValues
 	}
 }
 
-// Creates a new condition.Multi
-func NewMulti(op string, conditions ...Condition) *Multi {
-	return &Multi{conditions, op}
+// Create new Value condition
+func NewValue[T any](fieldRef *T, value T, operator string) *Value {
+	return &Value{rdb.KeyValue(fieldRef, value), operator}
+}
+
+// Create new List condition
+func NewList[T any](fieldRef *T, values []T, listOperator, soloOperator string) *List {
+	return &List{rdb.KeyList(fieldRef, values), listOperator, soloOperator}
+}
+
+// Create new Multi condition
+func NewMulti(operator string, conditions ...Condition) *Multi {
+	return &Multi{conditions, operator}
 }

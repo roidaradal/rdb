@@ -8,22 +8,38 @@ import (
 )
 
 const (
+	Equal        string = "="
+	NotEqual     string = "!="
+	Greater      string = ">"
+	GreaterEqual string = ">="
+	Less         string = "<"
+	LessEqual    string = "<="
+	In           string = "IN"
+	NotIn        string = "NOT IN"
+	And          string = "AND"
+	Or           string = "OR"
+	Prefix       string = "PREFIX"
+	Suffix       string = "SUFFIX"
+	Substring    string = "SUBSTRING"
+)
+
+const (
 	falseCondition string = "false"
 	trueCondition  string = "true"
 )
 
-// Returns 'false' as condition, empty list for values
+// Return 'false' as condition, empty list for values
 func falseConditionValues() (string, []any) {
 	return falseCondition, []any{}
 }
 
-// Returns 'true' as condition, empty list for values
+// Return 'true' as condition, empty list for values
 func trueConditionValues() (string, []any) {
 	return trueCondition, []any{}
 }
 
 // Build condition string and query parameter values list,
-// Values list corresponds to the ? in the query,
+// Values list corresponds to ? in the query,
 // Used for solo value conditions
 func soloConditionValues(column, operator string, value any) (string, []any) {
 	isValueNil := dyn.IsNull(value)
@@ -46,7 +62,7 @@ func soloConditionValues(column, operator string, value any) (string, []any) {
 }
 
 // Build condition string for list value conditions,
-// Adds the repeated placeholder ? to end of the condition
+// Adds repeated placeholder ? to end of condition
 func listCondition(column, operator string, numValues int) string {
 	placeholders := str.Repeat(numValues, "?", ", ")
 	return fmt.Sprintf("%s %s (%s)", column, operator, placeholders)
