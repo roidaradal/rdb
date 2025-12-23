@@ -91,7 +91,7 @@ func NewReader[T any](columns ...string) RowReader[T] {
 // Get reference to corresponding column field of given type and struct reference
 func getColumnFieldRef(structRef any, typeName, columnName string) (any, bool) {
 	structValue := reflect.ValueOf(structRef).Elem() // dereference pointer
-	fieldName := GetColumnFieldName(typeName, columnName)
+	fieldName := getColumnFieldName(typeName, columnName)
 	if fieldName == "" {
 		return nil, false
 	}

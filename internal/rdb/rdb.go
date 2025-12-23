@@ -72,7 +72,7 @@ func GetColumnNames(fieldRefs ...any) []string {
 // Get field name of given field reference,
 // Field must be from the singleton object
 func GetFieldName(typeName string, fieldRef any) string {
-	return GetColumnFieldName(typeName, GetColumnName(fieldRef))
+	return getColumnFieldName(typeName, GetColumnName(fieldRef))
 }
 
 // Get field names of given field references,
@@ -90,7 +90,7 @@ func GetFieldNames(typeName string, fieldRefs ...any) []string {
 }
 
 // Get field name for given type name's column
-func GetColumnFieldName(typeName, columnName string) string {
+func getColumnFieldName(typeName, columnName string) string {
 	if dict.NoKey(typeColumnFields, typeName) {
 		return ""
 	}

@@ -25,7 +25,7 @@ type columnsInfo struct {
 // StructRef is assumed to be validated as struct pointer
 func GetStructColumnValue(structRef any, typeName, columnName string) (any, bool) {
 	structValue := reflect.ValueOf(structRef).Elem() // dereference pointer
-	fieldName := GetColumnFieldName(typeName, columnName)
+	fieldName := getColumnFieldName(typeName, columnName)
 	if fieldName == "" {
 		return nil, false
 	}

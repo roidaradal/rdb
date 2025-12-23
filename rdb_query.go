@@ -14,6 +14,9 @@ var (
 	AssertRowsAffected = query.AssertRowsAffected // Creates ResultChecker that asserts number of rows affected
 	RowsAffected       = query.RowsAffected       // Get number of rows affected from SQL result (defaults to 0)
 	LastInsertID       = query.LastInsertID       // Get last insert ID from SQL result (defaults to 0)
+	Exec               = query.Exec               // Execute SQL query
+	ExecTx             = query.ExecTx             // Execute SQL query as part of transaction, rollback on any errors
+	Rollback           = query.Rollback           // Rolls back SQL transaction
 )
 
 var (

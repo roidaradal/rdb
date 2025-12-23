@@ -1,6 +1,8 @@
 # RDB
 A Go library for building type-safe SQL queries.
 
+The `ze` package contains Schema and Request types.
+
 `go get github.com/roidaradal/rdb/...`
 
 ## Initialization 
@@ -375,3 +377,97 @@ Executes an SQL query as part of a transaction, applies Rollback on any errors
 Rolls back the SQL transaction
 
 `err := rdb.Rollback(*sql.Tx, err)`
+
+## Ze 
+
+### Initialize 
+
+`err := ze.Initialize(*rdb.SQLConnParams)`
+
+### Errors and Status Codes 
+
+* _error_: ze.ErrInactiveItem
+* _error_: ze.ErrInvalidField
+* _error_: ze.ErrMissingField
+* _error_: ze.ErrMissingParams
+* _error_: ze.ErrNotFoundItem
+* _error_: ze.ErrMissingSchema
+* _status_: ze.OK200 (OK)
+* _status_: ze.OK201 (Created)
+* _status_: ze.Err400 (Missing client parameters)
+* _status_: ze.Err401 (Unauthenticated)
+* _status_: ze.Err403 (Unauthorized)
+* _status_: ze.Err404 (Not Found)
+* _status_: ze.Err429 (Rate limited)
+* _status_: ze.Err500 (Server-side Error)
+
+### Types 
+
+* ID
+* Date 
+* DateTime 
+* UniqueItem    : ID 
+* CodedItem     : Code 
+* CreatedItem   : CreatedAt 
+* ActiveItem    : IsActive
+* Identity      : ID, Code   
+* Item          : ID, Code, IsActive, CreatedAt  
+
+
+### Items, ItemsRef 
+Items schema and get Item reference object
+
+```
+ze.Items // *Schema[Item]
+itemsRef := ze.ItemsRef()
+```
+
+### _type_: Task 
+Contains Action and Target of Task 
+
+### _type_: Request 
+Application request that holds DB connection, transaction, checker, 
+transaction queries, request start time, and logs 
+
+```
+var rq *Request 
+rq, err := NewRequest(name string, args ...any)
+rq.AddLog(message)
+rq.AddFmtLog(format, args ...any)
+rq.AddDurationLog(time.Time)
+rq.AddErrorLog(error)
+rq.AddTxStep(rdb.Query)
+err := rq.StartTransaction(numSteps int)
+err := rq.CommitTransaction()
+output := rq.Output()
+```
+
+```
+srq := rq.SubRequest()
+rq.MergeLogs(srq)
+```
+
+### _type_: Schema[T]
+Schema object for given type 
+
+* ValidatorFn = func(any) bool
+* TransformFn = func(any) any
+
+```
+schema, err := NewSchema[T](&T{}, table)
+schema, err := NewSharedSchema[T](&T{})
+AddRequiredField(schema, &item.Field)
+AddEditableField(schema, &item.Field)
+AddTransformer(schema, &item.Field, transformKey)
+AddTransformFn(schema, &item.Field, TransformFn)
+
+var validator ValidatorFn 
+validator = NewStringValidator(func(string) bool)
+AddValidator(schema, &item.Field, validator)
+```
+
+Available transformer keys:
+* upper
+* lower
+* upperdot 
+* lowerdot
