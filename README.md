@@ -471,3 +471,103 @@ Available transformer keys:
 * lower
 * upperdot 
 * lowerdot
+
+
+
+### schema.Delete 
+
+```
+err := schema.Delete(*Request, rdb.Condition)
+err := schema.DeleteAt(*Request, rdb.Condition, table string)
+
+err := schema.DeleteTx(rqtx *Request, rdb.Condition)
+err := schema.DeleteTxAt(rqtx *Request, rdb.Condition, table string)
+```
+
+### schema.Get 
+
+```
+var item *T
+var obj *dict.Object 
+
+item, err := schema.Get(*Request, rdb.Condition)
+item, err := schema.GetAt(*Request, rdb.Condition, table string)
+
+obj, err := schema.GetOnly(*Request, rdb.Condition, fieldNames ...string)
+obj, err := schema.GetOnlyAt(*Request, rdb.Condition, table string, fieldNames ...string)
+```
+
+
+### schema.GetRows
+
+```
+var items []*T 
+var objs []*dict.Object 
+
+items, err := schema.GetRows(*Request, rdb.Condition)
+items, err := schema.GetRowsAt(*Request, rdb.Condition, table string)
+
+objs, err := schema.GetRowsOnly(*Request, rdb.Condition, fieldNames ...string)
+objs, err := schema.GetRowsOnlyAt(*Request, rdb.Condition, table string, fieldNames ...string)
+```
+
+### schema.ValidateNew 
+
+`item, err := schema.ValidateNew(*Request, item *T)`
+
+### schema.Insert
+
+```
+err := schema.Insert(*Request, *T)
+err := schema.InsertAt(*Request, *T, table string)
+id, err := schema.InsertID(*Request, *T)
+id, err := schema.InsertIDAt(*Request, *T, table string)
+
+err := schema.InsertTx(rqtx *Request, *T)
+err := schema.InsertTxAt(rqtx *Request, *T, table string)
+id, err := schema.InsertTxID(rqtx *Request, *T)
+id, err := schema.InsertTxIDAt(rqtx *Request, *T, table string)
+```
+
+### schema.InsertRows
+
+```
+err := schema.InsertRows(*Request, []*T)
+err := schema.InsertRowsAt(*Request, []*T, table string)
+
+err := schema.InsertTxRows(rqtx *Request, []*T)
+err := schema.InsertTxRowsAt(rqtx *Request, []*T, table string)
+```
+
+### schema.Toggle 
+
+```
+err := schema.ToggleID(*Request, id ID, isActive bool)
+err := schema.ToggleIDAt(*Request, id ID, isActive bool, table string)
+err := schema.ToggleCode(*Request, code string, isActive bool)
+err := schema.ToggleCodeAt(*Request, code string, isActive bool, table string)
+
+err := schema.ToggleTxID(rqtx *Request, id ID, isActive bool)
+err := schema.ToggleTxIDAt(rqtx *Request, id ID, isActive bool, table string)
+err := schema.ToggleTxCode(rqtx *Request, code string, isActive bool)
+err := schema.ToggleTxCodeAt(rqtx *Request, code string, isActive bool, table string)
+```
+
+### schema.FieldUpdates 
+
+```
+var oldItem *T 
+var fieldUpdates rdb.FieldUpdates 
+
+oldItem, fieldUpdates, err := schema.FieldUpdates(*Request, oldItem, patchObject dict.Object)
+```
+
+### schema.Update 
+
+```
+err := schema.Update(*Request, rdb.FieldUpdates, rdb.Condition)
+err := schema.UpdateAt(*Request, rdb.FieldUpdates, rdb.Condition, table string)
+
+err := schema.UpdateTx(rqtx *Request, rdb.FieldUpdates, rdb.Condition)
+err := schema.UpdateTxAt(rqtx *Request, rdb.FieldUpdates, rdb.Condition, table string)
+```
