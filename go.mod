@@ -1,10 +1,10 @@
 module github.com/roidaradal/rdb
 
-go 1.25.4
+go 1.25.0
 
 require (
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/roidaradal/fn v0.5.19
+	github.com/roidaradal/fn v0.5.47
 )
 
 require (
