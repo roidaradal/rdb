@@ -62,21 +62,21 @@ func Initialize(dbConnParams *rdb.SQLConnParams) error {
 }
 
 // Add a new schema with the given table, add to errors list if applicable
-func AddSchema[T any](item *T, table string, errs []error) (*Schema[T], []error) {
+func AddSchema[T any](item *T, table string, errs []error) *Schema[T] {
 	schema, err := NewSchema(item, table)
 	if err != nil {
 		errs = append(errs, err)
 	}
-	return schema, errs
+	return schema
 }
 
 // Add shared schema (no table), add to errors list if applicable
-func AddSharedSchema[T any](item *T, errs []error) (*Schema[T], []error) {
+func AddSharedSchema[T any](item *T, errs []error) *Schema[T] {
 	schema, err := NewSharedSchema(item)
 	if err != nil {
 		errs = append(errs, err)
 	}
-	return schema, errs
+	return schema
 }
 
 // Get Item reference object
