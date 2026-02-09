@@ -1,6 +1,7 @@
 package ze
 
 import (
+	"github.com/roidaradal/fn/fail"
 	"github.com/roidaradal/rdb"
 )
 
@@ -70,7 +71,7 @@ func toggleAt[T any](rq *Request, p *toggleParams, name, table string, byID bool
 	}
 	if !hasIdentity {
 		rq.AddLog("ID/Code to toggle is not set")
-		return ErrMissingParams
+		return fail.MissingParams
 	}
 	// Make sure Items schema is initialized
 	if Items == nil {

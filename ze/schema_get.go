@@ -2,6 +2,7 @@ package ze
 
 import (
 	"github.com/roidaradal/fn/dict"
+	"github.com/roidaradal/fn/fail"
 	"github.com/roidaradal/rdb"
 )
 
@@ -77,7 +78,7 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 	if condition == nil {
 		rq.AddLog("Condition is not set")
 		rq.Status = Err500
-		return nil, ErrMissingParams
+		return nil, fail.MissingParams
 	}
 
 	// Build SelectRowQuery and execute

@@ -20,14 +20,7 @@ const (
 	Err500 = http.StatusInternalServerError // server-side error
 )
 
-var (
-	ErrInactiveItem  = errors.New("public: Inactive item")
-	ErrInvalidField  = errors.New("public: Invalid field")
-	ErrMissingField  = errors.New("public: Missing required field")
-	ErrMissingParams = errors.New("public: Missing required parameters")
-	ErrNotFoundItem  = errors.New("public: Item not found")
-	ErrMissingSchema = errors.New("schema is not initialized")
-)
+var ErrMissingSchema = errors.New("schema is not initialized")
 
 var (
 	errMismatchCount  = errors.New("count mismatch")

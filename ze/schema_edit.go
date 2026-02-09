@@ -6,6 +6,7 @@ import (
 	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/dyn"
+	"github.com/roidaradal/fn/fail"
 	"github.com/roidaradal/rdb"
 )
 
@@ -26,7 +27,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(newValue) {
 				rq.Status = Err400
-				return nil, nil, ErrInvalidField
+				return nil, nil, fail.InvalidField
 			}
 		}
 		// Add field update if old and new values are not equal
@@ -39,7 +40,7 @@ func (s Schema[T]) FieldUpdates(rq *Request, oldItem *T, patchObject dict.Object
 	// Validate old item with updated values
 	if !check.IsValidStruct(oldItem) {
 		rq.Status = Err400
-		return nil, nil, ErrInvalidField
+		return nil, nil, fail.InvalidField
 	}
 
 	return oldItem, updates, nil
@@ -71,7 +72,7 @@ func updateAt[T any](rq *Request, updates rdb.FieldUpdates, condition rdb.Condit
 	if condition == nil || updates == nil {
 		rq.AddLog("Condition/updates not set")
 		rq.Status = Err500
-		return ErrMissingParams
+		return fail.MissingParams
 	}
 
 	// Build UpdateQuery

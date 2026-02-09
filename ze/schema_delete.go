@@ -3,6 +3,7 @@ package ze
 import (
 	"database/sql"
 
+	"github.com/roidaradal/fn/fail"
 	"github.com/roidaradal/rdb"
 )
 
@@ -32,7 +33,7 @@ func deleteAt(rq *Request, condition rdb.Condition, name, table string, isTx boo
 	if condition == nil {
 		rq.AddLog("Delete condition is not set")
 		rq.Status = Err500
-		return ErrMissingParams
+		return fail.MissingParams
 	}
 
 	// Build DeleteQuery

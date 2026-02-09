@@ -5,6 +5,7 @@ import (
 
 	"github.com/roidaradal/fn/check"
 	"github.com/roidaradal/fn/dyn"
+	"github.com/roidaradal/fn/fail"
 	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/rdb"
 )
@@ -14,7 +15,7 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 	// Validate struct
 	if !check.IsValidStruct(item) {
 		rq.Status = Err400
-		return nil, ErrMissingParams
+		return nil, fail.MissingParams
 	}
 
 	for _, fieldName := range s.required {
@@ -27,13 +28,13 @@ func (s Schema[T]) ValidateNew(rq *Request, item *T) (*T, error) {
 		if validator, ok := s.validators[fieldName]; ok {
 			if !validator(value) {
 				rq.Status = Err400
-				return nil, ErrInvalidField
+				return nil, fail.InvalidField
 			}
 		}
 		// Check if zero value
 		if dyn.IsZero(value) {
 			rq.Status = Err400
-			return nil, ErrMissingField
+			return nil, fail.MissingField
 		}
 		// Update transformed field
 		dyn.SetFieldValue(item, fieldName, value)
@@ -112,7 +113,7 @@ func insertAt[T any](rq *Request, item *T, name, table string, getID bool, isTx 
 	// Check that item is not null
 	if item == nil {
 		rq.AddLog("Item to be added is null")
-		return id, ErrMissingParams
+		return id, fail.MissingParams
 	}
 
 	// Build InsertRowQuery
@@ -163,7 +164,7 @@ func insertRowsAt[T any](rq *Request, items []*T, name, table string, isTx bool)
 	// Check that items are set
 	if items == nil {
 		rq.AddLog("Items to be added are not set")
-		return ErrMissingParams
+		return fail.MissingParams
 	}
 	numItems := len(items)
 
