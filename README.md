@@ -382,7 +382,11 @@ Rolls back the SQL transaction
 
 ### Initialize 
 
-`err := ze.Initialize(*rdb.SQLConnParams)`
+`err := ze.Initialize(*rdb.SQLConnParams)
+
+### Add Custom DB Connection 
+
+`err := ze.AddDBConnection(name, *rdb.SQLConnParams)`
 
 ### Errors and Status Codes 
 
@@ -432,6 +436,7 @@ transaction queries, request start time, and logs
 ```
 var rq *Request 
 rq, err := NewRequest(name string, args ...any)
+rq, err := NewReqestAt(connectionKey, name string, args ...any)
 rq.AddLog(message)
 rq.AddFmtLog(format, args ...any)
 rq.AddDurationLog(time.Time)

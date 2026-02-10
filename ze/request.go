@@ -42,19 +42,39 @@ func NewRequest(name string, args ...any) (*Request, error) {
 	if len(args) > 0 {
 		name = fmt.Sprintf(name, args...)
 	}
-	rq := &Request{
+	rq := newRequest(name)
+	if dbConn == nil {
+		rq.Status = Err500
+		return rq, errNoDBConnection
+	}
+	rq.DB = dbConn
+	return rq, nil
+}
+
+// Create new Request at custom db
+func NewRequestAt(key, name string, args ...any) (*Request, error) {
+	if len(args) > 0 {
+		name = fmt.Sprintf(name, args...)
+	}
+	rq := newRequest(name)
+	conn, ok := dbConnMap[key]
+	if !ok || conn == nil {
+		rq.Status = Err500
+		return rq, errNoDBConnection
+	}
+	rq.DB = conn
+	return rq, nil
+}
+
+// Create a new request object
+func newRequest(name string) *Request {
+	return &Request{
 		Name:   name,
-		DB:     dbConn,
 		Params: make(dict.Object),
 		Status: OK200,
 		start:  clock.DateTimeNow(),
 		logs:   make([]string, 0),
 	}
-	if dbConn == nil {
-		rq.Status = Err500
-		return rq, errNoDBConnection
-	}
-	return rq, nil
 }
 
 // Create a subrequest for concurrent tasks

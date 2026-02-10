@@ -31,8 +31,9 @@ var (
 )
 
 var (
-	Items  *Schema[Item] = nil // Items Schema
-	dbConn *sql.DB       = nil // db connection pool
+	Items     *Schema[Item]      = nil // Items Schema
+	dbConn    *sql.DB            = nil // db connection pool
+	dbConnMap map[string]*sql.DB = nil // map of custom db connection pools
 )
 
 // Initialize ze package; create Items schema and initialize db connection pool
@@ -51,7 +52,20 @@ func Initialize(dbConnParams *rdb.SQLConnParams) error {
 		return err
 	}
 
-	return err
+	// Initialize custom db connection pools
+	dbConnMap = make(map[string]*sql.DB)
+
+	return nil
+}
+
+// Add custom DB connection
+func AddDBConnection(name string, dbConnParams *rdb.SQLConnParams) error {
+	customDBConn, err := rdb.NewSQLConnection(dbConnParams)
+	if err != nil {
+		return err
+	}
+	dbConnMap[name] = customDBConn
+	return nil
 }
 
 // Add a new schema with the given table, add to errors list if applicable
