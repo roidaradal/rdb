@@ -93,7 +93,7 @@ func selectRowAt[T any](rq *Request, condition rdb.Condition, table string, sche
 	return item, nil
 }
 
-// Condition: create and execute SelectRowsQuery at given table
+// Common: create and execute SelectRowsQuery at given table
 func selectRowsAt[T any](rq *Request, condition rdb.Condition, table string, schema *Schema[T]) ([]*T, error) {
 	// Build SelectRowsQuery and execute
 	q := rdb.NewFullSelectRowsQuery(table, schema.Reader)

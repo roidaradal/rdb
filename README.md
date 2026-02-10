@@ -472,7 +472,12 @@ Available transformer keys:
 * upperdot 
 * lowerdot
 
+### schema.Count 
 
+```
+count, err := schema.Count(*Request, rdb.Condition)
+count, err := schema.CountAt(*Request, rdb.Condition, table string)
+```
 
 ### schema.Delete 
 
