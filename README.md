@@ -477,6 +477,13 @@ Available transformer keys:
 * upperdot 
 * lowerdot
 
+### AddSchema, AddSharedSchema 
+
+```
+schema := AddSchema[T](item *T, table string, []error) 
+schema := AddSharedSchema[T](item *T, []error)
+```
+
 ### schema.Count 
 
 ```
@@ -547,6 +554,16 @@ err := schema.InsertRowsAt(*Request, []*T, table string)
 
 err := schema.InsertTxRows(rqtx *Request, []*T)
 err := schema.InsertTxRowsAt(rqtx *Request, []*T, table string)
+```
+
+### schema.SetFlag 
+
+```
+err := schema.SetFlag(*Request, *booleanField, booleanValue)
+err := schema.SetFlagAt(*Request, *booleanField, booleanValue, table string)
+err := schema.SetTxFlag(rqtx *Request, *booleanField, booleanValue)
+err := schema.SetTxFlagAt(rqtx *Request, *booleanField, booleanValue, table string)
+
 ```
 
 ### schema.Toggle 
