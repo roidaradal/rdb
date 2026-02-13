@@ -30,10 +30,24 @@ func (x CodedItem) GetCode() string {
 	return x.Code
 }
 
+// Embeddable Code property, with validate: required
+type RequiredCode struct {
+	Code string `fx:"upper" validate:"required"`
+}
+
+func (x RequiredCode) GetCode() string {
+	return x.Code
+}
+
 // ID and Code
 type Identity struct {
 	UniqueItem
 	CodedItem
+}
+
+type CodedIdentity struct {
+	UniqueItem
+	RequiredCode
 }
 
 // Embeddable CreatedAt property
@@ -65,8 +79,22 @@ type Item struct {
 	CreatedItem
 }
 
+// ID, RequiredCode, IsActive, CreatedAt
+type ItemCoded struct {
+	CodedIdentity
+	ActiveItem
+	CreatedItem
+}
+
 // Initialize the ID, CreatedAt, IsActive to default values
 func (x *Item) Initialize() {
+	x.ID = 0 // for auto-increment
+	x.CreatedAt = clock.DateTimeNow()
+	x.IsActive = true
+}
+
+// Initialize the ID, CreatedAt, IsActive to default values
+func (x *ItemCoded) Initialize() {
 	x.ID = 0 // for auto-increment
 	x.CreatedAt = clock.DateTimeNow()
 	x.IsActive = true
