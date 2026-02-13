@@ -74,27 +74,35 @@ func (x *ActiveItem) SetIsActive(isActive bool) {
 
 // ID, Code, IsActive, CreatedAt
 type Item struct {
-	Identity
-	ActiveItem
-	CreatedItem
+	AutoItem
+	CodedItem
 }
 
 // ID, RequiredCode, IsActive, CreatedAt
 type ItemCoded struct {
-	CodedIdentity
-	ActiveItem
+	AutoItem
+	RequiredCode
+}
+
+// ID, IsActive, CreatedAt
+type AutoItem struct {
+	UniqueItem
 	CreatedItem
+	ActiveItem
 }
 
 // Initialize the ID, CreatedAt, IsActive to default values
 func (x *Item) Initialize() {
-	x.ID = 0 // for auto-increment
-	x.CreatedAt = clock.DateTimeNow()
-	x.IsActive = true
+	x.AutoItem.Initialize()
 }
 
 // Initialize the ID, CreatedAt, IsActive to default values
 func (x *ItemCoded) Initialize() {
+	x.AutoItem.Initialize()
+}
+
+// Initialize the ID, CratedAt, IsActive to default values
+func (x *AutoItem) Initialize() {
 	x.ID = 0 // for auto-increment
 	x.CreatedAt = clock.DateTimeNow()
 	x.IsActive = true
