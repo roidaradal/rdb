@@ -3,6 +3,7 @@ package ze
 import (
 	"github.com/roidaradal/fn/dict"
 	"github.com/roidaradal/fn/fail"
+	"github.com/roidaradal/fn/list"
 	"github.com/roidaradal/rdb"
 )
 
@@ -11,9 +12,33 @@ func (s Schema[T]) Get(rq *Request, condition rdb.Condition) (*T, error) {
 	return selectRowAt(rq, condition, s.Table, &s)
 }
 
+// SelectRowsQuery at schema.Table, then choose one at random
+func (s Schema[T]) GetRandom(rq *Request, condition rdb.Condition) (*T, error) {
+	rows, err := selectRowsAt(rq, condition, s.Table, &s)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, fail.NotFoundItem
+	}
+	return list.Random(rows), nil
+}
+
 // SelectRowQuery at table
 func (s Schema[T]) GetAt(rq *Request, condition rdb.Condition, table string) (*T, error) {
 	return selectRowAt(rq, condition, table, &s)
+}
+
+// SelectRowsQuery at table, then choose one at random
+func (s Schema[T]) GetRandomAt(rq *Request, condition rdb.Condition, table string) (*T, error) {
+	rows, err := selectRowsAt(rq, condition, table, &s)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, fail.NotFoundItem
+	}
+	return list.Random(rows), nil
 }
 
 // SelectRowQuery at schema.Table with pruning
