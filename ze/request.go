@@ -29,6 +29,7 @@ type Request struct {
 	DBTx    *sql.Tx
 	Checker rdb.ResultChecker
 	Status  int
+	Now     DateTime
 	// Private fields
 	start   DateTime
 	txSteps []rdb.Query
@@ -86,6 +87,11 @@ func (rq *Request) SubRequest() *Request {
 		Status: OK200,
 		logs:   make([]string, 0),
 	}
+}
+
+// Set Now field
+func (rq *Request) SetNow() {
+	rq.Now = clock.DateTimeNow()
 }
 
 // Combine logs with newline

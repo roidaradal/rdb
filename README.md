@@ -491,7 +491,7 @@ count, err := schema.Count(*Request, rdb.Condition)
 count, err := schema.CountAt(*Request, rdb.Condition, table string)
 ```
 
-### schema.Delete 
+### schema.Delete, schema.CountDelete
 
 ```
 err := schema.Delete(*Request, rdb.Condition)
@@ -499,6 +499,12 @@ err := schema.DeleteAt(*Request, rdb.Condition, table string)
 
 err := schema.DeleteTx(rqtx *Request, rdb.Condition)
 err := schema.DeleteTxAt(rqtx *Request, rdb.Condition, table string)
+
+countDeleted, err := schema.CountDelete(*Request, rdb.Condition)
+countDeleted, err := schema.CountDeleteAt(*Request, rdb.Condition, table string)
+
+countDeleted, err := schema.CountDeleteTx(rqtx *Request, rdb.Condition)
+countDeleted, err := schema.CountDeleteTxAt(rqtx *Request, rdb.Condition, table string)
 ```
 
 ### schema.Get 
