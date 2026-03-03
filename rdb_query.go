@@ -81,3 +81,8 @@ func NewTopRowQuery[T any](table string, reader RowReader[T]) *query.TopRow[T] {
 func NewTopValueQuery[T, V any](table string, fieldRef *V) *query.TopValue[T, V] {
 	return query.NewTopValue[T](table, fieldRef)
 }
+
+// Create new GroupCount Query
+func NewGroupCountQuery[K comparable](table string, groupFieldRef *K) *query.GroupCount[K] {
+	return query.NewGroupCount[K](table, groupFieldRef)
+}

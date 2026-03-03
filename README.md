@@ -194,6 +194,15 @@ q.Where(condition) // optional
 uniqueValues, err := q.Query(*sql.DB)
 ```
 
+### NewGroupCountQuery 
+Creates a new GroupCountQuery 
+
+``` 
+q := rdb.NewGroupCountQuery(table, &item.Field)
+q.Where(condition) // optional 
+counts, err := q.GroupCount(*sql.DB) // map[field]int
+```
+
 ### NewInsertRowQuery 
 Creates a new InsertRowQuery
 
