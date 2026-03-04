@@ -91,3 +91,8 @@ func NewGroupCountQuery[K comparable](table string, groupFieldRef *K) *query.Gro
 func NewGroupSumQuery[K comparable, V query.Number](table string, groupFieldRef *K, sumFieldRef *V) *query.GroupSum[K, V] {
 	return query.NewGroupSum(table, groupFieldRef, sumFieldRef)
 }
+
+// Create new Sum Query
+func NewSumQuery[T any](table string, reader RowReader[T]) *query.SumQuery[T] {
+	return query.NewSum(table, reader)
+}
