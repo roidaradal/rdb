@@ -84,5 +84,10 @@ func NewTopValueQuery[T, V any](table string, fieldRef *V) *query.TopValue[T, V]
 
 // Create new GroupCount Query
 func NewGroupCountQuery[K comparable](table string, groupFieldRef *K) *query.GroupCount[K] {
-	return query.NewGroupCount[K](table, groupFieldRef)
+	return query.NewGroupCount(table, groupFieldRef)
+}
+
+// Create new GroupSum Query
+func NewGroupSumQuery[K comparable, V query.Number](table string, groupFieldRef *K, sumFieldRef *V) *query.GroupSum[K, V] {
+	return query.NewGroupSum(table, groupFieldRef, sumFieldRef)
 }

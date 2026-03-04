@@ -198,9 +198,18 @@ uniqueValues, err := q.Query(*sql.DB)
 Creates a new GroupCountQuery 
 
 ``` 
-q := rdb.NewGroupCountQuery(table, &item.Field)
+q := rdb.NewGroupCountQuery(table, &item.GroupField)
 q.Where(condition) // optional 
 counts, err := q.GroupCount(*sql.DB) // map[field]int
+```
+
+### NewGroupSumQuery 
+Creates a new GroupSumQuery 
+
+```
+q := rdb.NewGroupSumQuery(table, &item.GroupField, &item.SumField)
+q.Where(condition) // optional 
+totals, err := q.GroupSum(*sql.DB) // map[groupField]sumFieldTotals
 ```
 
 ### NewInsertRowQuery 
