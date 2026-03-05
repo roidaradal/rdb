@@ -345,6 +345,7 @@ rdb.Update(q, &item.Field1, value1)
 rdb.Update(q, &item.Field2, value2) // or 
 q.Update(fieldName, value)
 q.Updates(map[fieldName]value)      // values = any type
+q.Limit(limit) // optional
 ```
 
 ### NewValueQuery 

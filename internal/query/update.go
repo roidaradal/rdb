@@ -21,6 +21,7 @@ type Update[T any] struct {
 	conditionQuery
 	typeName string
 	updates  []*rdb.Value
+	limit    uint
 }
 
 // Create new Update Query
@@ -37,6 +38,11 @@ func NewUpdate[T any](table string) *Update[T] {
 func AddUpdate[T, V any](q *Update[T], fieldRef *V, value V) {
 	// Note: Cannot be method as generics are not supported in methods
 	q.updates = append(q.updates, rdb.KeyValue(fieldRef, value))
+}
+
+// Set limit for Update Query
+func (q *Update[T]) Limit(limit uint) {
+	q.limit = limit
 }
 
 // Add column=value update to Update Query
@@ -78,5 +84,8 @@ func (q Update[T]) Build() (string, []any) {
 	update := strings.Join(updates, ", ")
 	query := "UPDATE %s SET %s WHERE %s"
 	query = fmt.Sprintf(query, q.table, update, condition)
+	if q.limit > 0 {
+		query = fmt.Sprintf("%s LIMIT %d", query, q.limit)
+	}
 	return query, values
 }

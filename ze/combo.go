@@ -18,3 +18,24 @@ func MoveItem[T1, T2 any](rqtx *Request, insertSchema *Schema[T1], item *T1, del
 	}
 	return nil
 }
+
+// Update one item and fetch it
+func UpdateAndGet[T any](rqtx *Request, schema *Schema[T], setUpdatesFn func(rdb.Query), updateCondition, selectCondition rdb.Condition) (*T, error) {
+	// Update one item
+	q := rdb.NewUpdateQuery[T](schema.Table)
+	q.Where(updateCondition)
+	q.Limit(1)
+	setUpdatesFn(q)
+	rqtx.AddTxStep(q)
+	_, err := rdb.ExecTx(q, rqtx.DBTx, rqtx.Checker)
+	if err != nil {
+		return nil, err
+	}
+	// Select one item
+	item, err := schema.Get(rqtx, selectCondition)
+	if err != nil {
+		err = rdb.Rollback(rqtx.DBTx, err) // Manual rollback on error of Get
+		return nil, err
+	}
+	return item, nil
+}
