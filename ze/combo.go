@@ -39,3 +39,29 @@ func UpdateAndGet[T any](rqtx *Request, schema *Schema[T], setUpdatesFn func(*rd
 	}
 	return item, nil
 }
+
+// Gets the item and locks it
+// Note: no need to include IsLocked = true/false in conditions, as this function adds it
+func GetAndLock[T any](rqtx *Request, schema *Schema[T], lockField *bool, selectCondition rdb.Condition, lockConditionFn func(*T) rdb.Condition) (*T, error) {
+	// Get unlocked item
+	condition := rdb.And(
+		selectCondition,
+		rdb.Equal(lockField, false),
+	)
+	item, err := schema.Get(rqtx, condition)
+	if err != nil {
+		err = rdb.Rollback(rqtx.DBTx, err) // Manual rollback on error fo Get
+		return nil, err
+	}
+	// Lock item
+	lockCondition := lockConditionFn(item)
+	condition2 := rdb.And(
+		lockCondition,
+		rdb.Equal(lockField, false),
+	)
+	err = schema.SetTxFlag(rqtx, condition2, lockField, true)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
