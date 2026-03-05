@@ -90,8 +90,9 @@ func (rq *Request) SubRequest() *Request {
 }
 
 // Set Now field
-func (rq *Request) SetNow() {
+func (rq *Request) SetNow() DateTime {
 	rq.Now = clock.DateTimeNow()
+	return rq.Now
 }
 
 // Combine logs with newline

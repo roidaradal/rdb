@@ -622,3 +622,9 @@ err := schema.UpdateAt(*Request, rdb.FieldUpdates, rdb.Condition, table string)
 err := schema.UpdateTx(rqtx *Request, rdb.FieldUpdates, rdb.Condition)
 err := schema.UpdateTxAt(rqtx *Request, rdb.FieldUpdates, rdb.Condition, table string)
 ```
+
+### schema.GetOrCreate
+
+```
+item, err := schema.GetOrCreate(*Request, name string, owner string, preCondition, postCondition, newFn)
+```
