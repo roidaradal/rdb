@@ -13,7 +13,7 @@ type UniqueItem struct {
 	ID ID `json:"-"`
 }
 
-func (x UniqueItem) GetID() ID {
+func (x *UniqueItem) GetID() ID {
 	return x.ID
 }
 
@@ -23,19 +23,19 @@ func (x *UniqueItem) SetID(id ID) {
 
 // Embeddable Code property
 type CodedItem struct {
-	Code string `fx:"upper"`
+	Code string //`fx:"upper"`
 }
 
-func (x CodedItem) GetCode() string {
+func (x *CodedItem) GetCode() string {
 	return x.Code
 }
 
 // Embeddable Code property, with validate: required
 type RequiredCode struct {
-	Code string `fx:"upper" validate:"required"`
+	Code string `validate:"required"` // fx:"upper"
 }
 
-func (x RequiredCode) GetCode() string {
+func (x *RequiredCode) GetCode() string {
 	return x.Code
 }
 
@@ -55,7 +55,7 @@ type CreatedItem struct {
 	CreatedAt DateTime
 }
 
-func (x CreatedItem) GetDateTime() DateTime {
+func (x *CreatedItem) GetDateTime() DateTime {
 	return x.CreatedAt
 }
 
@@ -64,7 +64,7 @@ type ActiveItem struct {
 	IsActive bool
 }
 
-func (x ActiveItem) CheckIfActive() bool {
+func (x *ActiveItem) CheckIfActive() bool {
 	return x.IsActive
 }
 
