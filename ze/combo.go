@@ -20,7 +20,7 @@ func MoveItem[T1, T2 any](rqtx *Request, insertSchema *Schema[T1], item *T1, del
 }
 
 // Update one item and fetch it
-func UpdateAndGet[T any](rqtx *Request, schema *Schema[T], setUpdatesFn func(rdb.Query), updateCondition, selectCondition rdb.Condition) (*T, error) {
+func UpdateAndGet[T any](rqtx *Request, schema *Schema[T], setUpdatesFn func(*rdb.UpdateQuery[T]), updateCondition, selectCondition rdb.Condition) (*T, error) {
 	// Update one item
 	q := rdb.NewUpdateQuery[T](schema.Table)
 	q.Where(updateCondition)

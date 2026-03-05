@@ -3,10 +3,11 @@ package rdb
 import "github.com/roidaradal/rdb/internal/query"
 
 type (
-	Query         = query.Query         // Query interface
-	ResultChecker = query.ResultChecker // Checks SQL result if condition is satisfied
-	FieldUpdate   = query.FieldUpdate   // [OldValue, NewValue]
-	FieldUpdates  = query.FieldUpdates  // {FieldName => [OldValue, NewValue]}
+	Query              = query.Query         // Query interface
+	ResultChecker      = query.ResultChecker // Checks SQL result if condition is satisfied
+	FieldUpdate        = query.FieldUpdate   // [OldValue, NewValue]
+	FieldUpdates       = query.FieldUpdates  // {FieldName => [OldValue, NewValue]}
+	UpdateQuery[T any] = query.Update[T]
 )
 
 var (
