@@ -23,6 +23,7 @@ const (
 var ErrMissingSchema = errors.New("schema is not initialized")
 
 var (
+	errWrongGetCount  = errors.New("public: Failed to get some items")
 	errMismatchCount  = errors.New("count mismatch")
 	errNoDBConnection = errors.New("no db connection")
 	errNoDBTx         = errors.New("no db transaction")

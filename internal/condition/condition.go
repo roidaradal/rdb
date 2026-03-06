@@ -94,15 +94,18 @@ func (c Multi) Build() (string, []any) {
 		// one condition = only build that one
 		return c.conditions[0].Build()
 	default:
-		conditions := make([]string, numConditions)
+		conditions := make([]string, 0, numConditions)
 		allValues := make([]any, 0)
-		for i, condition := range c.conditions {
+		for _, condition := range c.conditions {
+			if condition == nil {
+				continue // skip null conditions
+			}
 			conditionString, values := condition.Build()
 			if conditionString == falseCondition {
 				// If any condition fails, return false condition immediately
 				return falseConditionValues()
 			}
-			conditions[i] = conditionString
+			conditions = append(conditions, conditionString)
 			allValues = append(allValues, values...)
 		}
 		// Join by operator and wrap in parentheses

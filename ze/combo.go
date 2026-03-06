@@ -1,6 +1,8 @@
 package ze
 
-import "github.com/roidaradal/rdb"
+import (
+	"github.com/roidaradal/rdb"
+)
 
 // Insert item to insertSchema and delete correpsonding item from deleteSchema, as part of a transaction
 func MoveItem[T1, T2 any](rqtx *Request, insertSchema *Schema[T1], item *T1, deleteSchema *Schema[T2], deleteCondition rdb.Condition) error {
@@ -55,12 +57,11 @@ func GetAndLock[T any](rqtx *Request, schema *Schema[T], lockField *bool, select
 		return nil, err
 	}
 	// Lock item
-	lockCondition := lockConditionFn(item)
-	condition2 := rdb.And(
-		lockCondition,
+	lockCondition := rdb.And(
+		lockConditionFn(item),
 		rdb.Equal(lockField, false),
 	)
-	err = schema.SetTxFlag(rqtx, condition2, lockField, true)
+	err = schema.SetTxFlag(rqtx, lockCondition, lockField, true)
 	if err != nil {
 		return nil, err
 	}
@@ -81,10 +82,11 @@ func GetAndLockItems[T any](rqtx *Request, schema *Schema[T], lockField *bool, s
 		err = rdb.Rollback(rqtx.DBTx, err)
 		return nil, err
 	}
+	// Check that rows have correct number of items
 	if len(items) != numItems {
 		rqtx.Status = Err500
 		// Manual rollback if mismatch count
-		err = rdb.Rollback(rqtx.DBTx, errMismatchCount)
+		err = rdb.Rollback(rqtx.DBTx, errWrongGetCount)
 		return nil, err
 	}
 	// Lock items
@@ -98,4 +100,35 @@ func GetAndLockItems[T any](rqtx *Request, schema *Schema[T], lockField *bool, s
 		return nil, err
 	}
 	return items, nil
+}
+
+type GetOrCreateAndLockParams[T any] struct {
+	GetOrCreateParams[T]
+	LockField       *bool
+	LockConditionFn func(*T) rdb.Condition
+}
+
+// GetOrCreate item, then locks it
+func GetOrCreateAndLock[T any](rqtx *Request, schema *Schema[T], cfg *GetOrCreateAndLockParams[T]) (*T, error) {
+	// Get or create unlocked item
+	unlockedCondition := rdb.Equal(cfg.LockField, false)
+	if cfg.PostCondition == nil {
+		cfg.PostCondition = unlockedCondition
+	} else {
+		cfg.PostCondition = rdb.And(cfg.PostCondition, unlockedCondition)
+	}
+	item, err := schema.GetOrCreateTx(rqtx, &cfg.GetOrCreateParams)
+	if err != nil {
+		return nil, err
+	}
+	// Lock item
+	lockCondition := rdb.And(
+		cfg.LockConditionFn(item),
+		rdb.Equal(cfg.LockField, false),
+	)
+	err = schema.SetTxFlag(rqtx, lockCondition, cfg.LockField, true)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
 }
