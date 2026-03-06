@@ -27,8 +27,59 @@ func (s Schema[T]) SetTxFlagAt(rqtx *Request, condition rdb.Condition, field *bo
 	return setFlagAt[T](rqtx, condition, field, flag, table, s.Name, true)
 }
 
+// SetFlags: updateQuery of boolean=flag at schema.Table, affecting multiple rows
+func (s Schema[T]) SetFlags(rq *Request, condition rdb.Condition, field *bool, flag bool, numItems int) error {
+	return setFlagsAt[T](rq, condition, field, flag, numItems, s.Table, s.Name, false)
+}
+
+// SetFlagsAt: updateQuery of boolean=flag at table, affecting multiple rows
+func (s Schema[T]) SetFlagsAt(rq *Request, condition rdb.Condition, field *bool, flag bool, numItems int, table string) error {
+	return setFlagsAt[T](rq, condition, field, flag, numItems, table, s.Name, false)
+}
+
+// SetTxFlags: updateQuery transaction of boolean=flag at schema.Table, affecting multiple rows
+func (s Schema[T]) SetTxFlags(rqtx *Request, condition rdb.Condition, field *bool, flag bool, numItems int) error {
+	return setFlagsAt[T](rqtx, condition, field, flag, numItems, s.Table, s.Name, true)
+}
+
+// SetTxFlagsAt: updateQuery transaction of boolean=flag at table, affecting multiple rows
+func (s Schema[T]) SetTxFlagsAt(rqtx *Request, condition rdb.Condition, field *bool, flag bool, numItems int, table string) error {
+	return setFlagsAt[T](rqtx, condition, field, flag, numItems, table, s.Name, true)
+}
+
 // Common: create and execute UpdateQuery of boolean=flag at given table
 func setFlagAt[T any](rq *Request, condition rdb.Condition, field *bool, flag bool, table, name string, isTx bool) error {
+	// Check that condition is set
+	if condition == nil {
+		rq.AddLog("Condition not set")
+		rq.Status = Err500
+		return fail.MissingParams
+	}
+
+	// Build UpdateQuery
+	q := rdb.NewUpdateQuery[T](table)
+	q.Where(condition)
+	q.Limit(1)
+	rdb.Update(q, field, flag)
+
+	// Execute UpdateQuery
+	var err error
+	if isTx {
+		rq.AddTxStep(q)
+		_, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
+	} else {
+		_, err = rdb.Exec(q, rq.DB)
+	}
+	if err != nil {
+		rq.AddFmtLog("Failed to update %s", name)
+		rq.Status = Err500
+		return err
+	}
+	return nil
+}
+
+// Common: create and execute UpdateQuery of boolean=flag at given table, affecting multiple rows
+func setFlagsAt[T any](rq *Request, condition rdb.Condition, field *bool, flag bool, numItems int, table, name string, isTx bool) error {
 	// Check that condition is set
 	if condition == nil {
 		rq.AddLog("Condition not set")
@@ -46,7 +97,8 @@ func setFlagAt[T any](rq *Request, condition rdb.Condition, field *bool, flag bo
 	var err error
 	if isTx {
 		rq.AddTxStep(q)
-		result, err = rdb.ExecTx(q, rq.DBTx, rq.Checker)
+		checker := rdb.AssertRowsAffected(numItems)
+		result, err = rdb.ExecTx(q, rq.DBTx, checker)
 	} else {
 		result, err = rdb.Exec(q, rq.DB)
 	}
@@ -55,8 +107,14 @@ func setFlagAt[T any](rq *Request, condition rdb.Condition, field *bool, flag bo
 		rq.Status = Err500
 		return err
 	}
-
 	rowsAffected := rdb.RowsAffected(result)
+
+	// If not transaction, check if rowsAffected == numItems
+	if !isTx && rowsAffected != numItems {
+		rq.AddFmtLog("Update count mismatch: items = %d, rows = %d", numItems, rowsAffected)
+		rq.Status = Err500
+		return errMismatchCount
+	}
 	if rowsAffected != 1 {
 		rq.AddFmtLog("Updated: %d %s", rowsAffected, name)
 	}

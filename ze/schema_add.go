@@ -192,7 +192,7 @@ func insertRowsAt[T any](rq *Request, items []*T, name, table string, isTx bool)
 
 	// If not transaction, check if rowsAffected == numItems
 	if !isTx && rowsAffected != numItems {
-		rq.AddFmtLog("Count mismatch: items = %d, rows = %d", numItems, rowsAffected)
+		rq.AddFmtLog("Insert count mismatch: items = %d, rows = %d", numItems, rowsAffected)
 		rq.Status = Err500
 		return errMismatchCount
 	}

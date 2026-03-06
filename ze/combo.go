@@ -93,7 +93,7 @@ func GetAndLockItems[T any](rqtx *Request, schema *Schema[T], lockField *bool, s
 		lockCondition,
 		rdb.Equal(lockField, false),
 	)
-	err = schema.SetTxFlag(rqtx, condition2, lockField, true)
+	err = schema.SetTxFlags(rqtx, condition2, lockField, true, numItems)
 	if err != nil {
 		return nil, err
 	}
