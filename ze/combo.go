@@ -50,7 +50,8 @@ func GetAndLock[T any](rqtx *Request, schema *Schema[T], lockField *bool, select
 	)
 	item, err := schema.Get(rqtx, condition)
 	if err != nil {
-		err = rdb.Rollback(rqtx.DBTx, err) // Manual rollback on error fo Get
+		// Manual rollback on error of Get
+		err = rdb.Rollback(rqtx.DBTx, err)
 		return nil, err
 	}
 	// Lock item
@@ -64,4 +65,37 @@ func GetAndLock[T any](rqtx *Request, schema *Schema[T], lockField *bool, select
 		return nil, err
 	}
 	return item, nil
+}
+
+// Gets a list of items and locks all of them
+// Note: no need to include IsLocked = true/false in conditions, as this function adds it
+func GetAndLockItems[T any](rqtx *Request, schema *Schema[T], lockField *bool, selectCondition rdb.Condition, lockConditionFn func([]*T) rdb.Condition, numItems int) ([]*T, error) {
+	// Get unlocked items
+	condition := rdb.And(
+		selectCondition,
+		rdb.Equal(lockField, false),
+	)
+	items, err := schema.GetRows(rqtx, condition)
+	if err != nil {
+		// Manual rollback on error of GetRows
+		err = rdb.Rollback(rqtx.DBTx, err)
+		return nil, err
+	}
+	if len(items) != numItems {
+		rqtx.Status = Err500
+		// Manual rollback if mismatch count
+		err = rdb.Rollback(rqtx.DBTx, errMismatchCount)
+		return nil, err
+	}
+	// Lock items
+	lockCondition := lockConditionFn(items)
+	condition2 := rdb.And(
+		lockCondition,
+		rdb.Equal(lockField, false),
+	)
+	err = schema.SetTxFlag(rqtx, condition2, lockField, true)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
 }
